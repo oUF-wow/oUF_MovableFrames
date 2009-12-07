@@ -1,0 +1,8 @@
+## Interface: 30300
+## Title: oUF_MovableFrames
+## Author: Haste
+## Version: 1.0
+## X-eMail: troeks@gmail.com
+## Notes: Easily move frames created by oUF.
+
+movable.lua
