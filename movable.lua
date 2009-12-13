@@ -91,26 +91,18 @@ local function restorePosition(obj)
 	-- We've not saved any custom position for this style.
 	if(not _DB[style] or not _DB[style][identifier]) then return end
 
-	-- TODO: Makes this more general.
-	if(isHeader) then
-		local parent = obj:GetParent()
-		local SetPoint = getmetatable(parent).__index.SetPoint
-		obj:GetParent().SetPoint = restorePosition
+	local parent = (isHeader and obj:GetParent())
+	local SetPoint = getmetatable(parent or obj).__index.SetPoint;
 
-		parent:ClearAllPoints()
-		for point, parentName, x, y in _DB[style][identifier]:gmatch(
-		"(%w+)\031(.-)\031([+-]?%d+%.?%d*)\031([+-]?%d+%.?%d*)\029") do
-			SetPoint(parent, point, parentName, point, x, y)
-		end
-	else
-		local SetPoint = getmetatable(obj).__index.SetPoint
-		obj.SetPoint = restorePosition
+	-- Hah, a spot you have to use semi-colon!
+	-- Guess I've never experienced that as these are usually wrapped in do end
+	-- statements.
+	(parent or obj).SetPoint = restorePosition;
+	(parent or obj):ClearAllPoints();
 
-		obj:ClearAllPoints()
-		for point, parentName, x, y in _DB[style][identifier]:gmatch(
+	for point, parentName, x, y in _DB[style][identifier]:gmatch(
 		"(%w+)\031(.-)\031([+-]?%d+%.?%d*)\031([+-]?%d+%.?%d*)\029") do
-			SetPoint(obj, point, parentName, point, x, y)
-		end
+		SetPoint(parent or obj, point, parentName, point, x, y)
 	end
 end
 
@@ -198,18 +190,14 @@ do
 		backdrop:StartMoving()
 		backdrop:StopMovingOrSizing()
 
-		if(not isHeader) then
-			obj:ClearAllPoints()
-			obj:SetAllPoints(backdrop)
-		else
-			header:ClearAllPoints()
-			header:SetAllPoints(backdrop)
-
-			-- Work around the fact that headers with no units displayed are 0 in height.
-			if(math.floor(header:GetHeight()) == 0) then
-				header:SetHeight(header:GetChildren():GetHeight())
-			end
+		-- Work around the fact that headers with no units displayed are 0 in height.
+		if(header and math.floor(header:GetHeight()) == 0) then
+			local height = header:GetChildren():GetHeight()
+			backdrop:SetHeight(height)
 		end
+
+		(header or obj):ClearAllPoints();
+		(header or obj):SetAllPoints(backdrop);
 
 		backdrop:SetScript("OnDragStart", OnDragStart)
 		backdrop:SetScript("OnDragStop", OnDragStop)
