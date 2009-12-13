@@ -16,6 +16,9 @@ local _BACKDROP = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background";
 }
 
+local print = function(...)
+	return print('|cff33ff99oUF_MovableFrames:|r', ...)
+end
 local round = function(n)
 	return math.floor(n * 1e5 + .5) / 1e5
 end
@@ -117,26 +120,42 @@ local savePosition = function(obj, override)
 	end
 end
 
-local frame = CreateFrame"Frame"
-frame:SetScript("OnEvent", function(self)
-	-- I honestly don't trust the load order of SVs.
-	_DB = bb08df87101dd7f2161e5b77cf750f753c58ef1b or {}
-	bb08df87101dd7f2161e5b77cf750f753c58ef1b = _DB
-	-- Got to catch them all!
-	for _, obj in next, oUF.objects do
-		restorePosition(obj)
-	end
+do
+	local frame = CreateFrame"Frame"
+	frame:SetScript("OnEvent", function(self)
+		return self[event](self)
+	end)
 
-	oUF:RegisterInitCallback(restorePosition)
-	self:UnregisterEvent"VARIABLES_LOADED"
-	self:SetScript("OnEvent", nil)
-end)
-frame:RegisterEvent"VARIABLES_LOADED"
+	function frame:VARIABLES_LOADED()
+		-- I honestly don't trust the load order of SVs.
+		_DB = bb08df87101dd7f2161e5b77cf750f753c58ef1b or {}
+		bb08df87101dd7f2161e5b77cf750f753c58ef1b = _DB
+		-- Got to catch them all!
+		for _, obj in next, oUF.objects do
+			restorePosition(obj)
+		end
+
+		oUF:RegisterInitCallback(restorePosition)
+		self:UnregisterEvent"VARIABLES_LOADED"
+		self.VARIABLES_LOADED = nil
+	end
+	frame:RegisterEvent"VARIABLES_LOADED"
+
+	function frame:PLAYER_REGEN_DISABLED()
+		print("Anchors hidden due to combat.")
+		for k, bdrop in next, backdropPool do
+			bdrop:Hide()
+		end
+
+		_LOCK = nil
+	end
+	frame:RegisterEvent"PLAYER_REGEN_DISABLED"
+end
 
 local getBackdrop
 do
 	local OnShow = function(self)
-		if(self.isHeader) then
+		if(self.header) then
 			self.name:SetText(self.header:GetName())
 		else
 			local desc = self.obj.unit or self.obj:GetName() or '<unknown>'
@@ -181,7 +200,6 @@ do
 		backdrop.name = name
 		backdrop.obj = obj
 		backdrop.header = header
-		backdrop.isHeader = isHeader
 
 		backdrop:SetBackdropBorderColor(0, .9, 0)
 		backdrop:SetBackdropColor(0, .9, 0)
@@ -208,18 +226,16 @@ do
 	end
 end
 
--- TODO: Actually spew something out:
 SLASH_OUF_MOVABLEFRAMES1 = '/omf'
 SlashCmdList['OUF_MOVABLEFRAMES'] = function(inp)
 	if(InCombatLockdown()) then
-		return
+		return print"Frames cannot be moved while in combat. Bailing out."
 	end
 
 	if(not _LOCK) then
 		for k, obj in next, oUF.objects do
 			local style, identifier, isHeader = getObjectInformation(obj)
 			local backdrop = getBackdrop(obj, isHeader)
-			-- XXX: Meh...
 			backdrop:Show()
 		end
 
