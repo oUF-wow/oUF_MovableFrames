@@ -144,12 +144,13 @@ do
 	frame:RegisterEvent"VARIABLES_LOADED"
 
 	function frame:PLAYER_REGEN_DISABLED()
-		print("Anchors hidden due to combat.")
-		for k, bdrop in next, backdropPool do
-			bdrop:Hide()
+		if(_LOCK) then
+			print("Anchors hidden due to combat.")
+			for k, bdrop in next, backdropPool do
+				bdrop:Hide()
+			end
+			_LOCK = nil
 		end
-
-		_LOCK = nil
 	end
 	frame:RegisterEvent"PLAYER_REGEN_DISABLED"
 end
