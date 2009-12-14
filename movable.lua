@@ -64,7 +64,7 @@ local getPoint = function(obj)
 
 	return string.format(
 		'%s\031%s\031%d\031%d',
-		point, 'UIParent', round(x / S), round(y / S)
+		point, 'UIParent', round(x * S), round(y * S)
 	)
 end
 
@@ -108,7 +108,7 @@ local function restorePosition(obj)
 	-- damn it Blizzard, _how_ did you manage to get the input of this function
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
 	local point, parentName, x, y = string.split('\031', _DB[style][identifier])
-	SetPoint(parent or obj, point, parentName, point, x * scale, y * scale)
+	SetPoint(parent or obj, point, parentName, point, x / scale, y / scale)
 end
 
 local savePosition = function(obj, override)
