@@ -29,6 +29,7 @@ local backdropPool = {}
 -- of the anchor, as it does most of the work for us already.
 local getPoint = function(obj)
 	-- VARIABLE NAMES OF DOOM!
+	local S = obj:GetEffectiveScale()
 	local L, R = obj:GetLeft(), obj:GetRight()
 	local T, B = obj:GetTop(), obj:GetBottom()
 	local Cx, Cy = obj:GetCenter()
@@ -63,7 +64,7 @@ local getPoint = function(obj)
 
 	return string.format(
 		'%s\031%s\031%d\031%d',
-		point, 'UIParent', round(x), round(y)
+		point, 'UIParent', round(x / S), round(y / S)
 	)
 end
 
@@ -94,6 +95,7 @@ local function restorePosition(obj)
 	-- We've not saved any custom position for this style.
 	if(not _DB[style] or not _DB[style][identifier]) then return end
 
+	local scale = UIParent:GetScale()
 	local parent = (isHeader and obj:GetParent())
 	local SetPoint = getmetatable(parent or obj).__index.SetPoint;
 
@@ -106,7 +108,7 @@ local function restorePosition(obj)
 	-- damn it Blizzard, _how_ did you manage to get the input of this function
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
 	local point, parentName, x, y = string.split('\031', _DB[style][identifier])
-	SetPoint(parent or obj, point, parentName, point, x, y)
+	SetPoint(parent or obj, point, parentName, point, x * scale, y * scale)
 end
 
 local savePosition = function(obj, override)
