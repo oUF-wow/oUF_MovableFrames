@@ -6,7 +6,7 @@ assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
 -- The DB is organized as the following:
 -- {
 --    Lily = {
---       player = "CENTER\031UIParent\0310\031-621\029",
+--       player = "CENTER\031UIParent\0310\031-621",
 -- }
 --}
 local _DB
@@ -62,7 +62,7 @@ local getPoint = function(obj)
 	end
 
 	return string.format(
-		'%s\031%s\031%d\031%d\029',
+		'%s\031%s\031%d\031%d',
 		point, 'UIParent', round(x), round(y)
 	)
 end
@@ -103,10 +103,10 @@ local function restorePosition(obj)
 	(parent or obj).SetPoint = restorePosition;
 	(parent or obj):ClearAllPoints();
 
-	for point, parentName, x, y in _DB[style][identifier]:gmatch(
-		"(%w+)\031(.-)\031([+-]?%d+%.?%d*)\031([+-]?%d+%.?%d*)\029") do
-		SetPoint(parent or obj, point, parentName, point, x, y)
-	end
+	-- damn it Blizzard, _how_ did you manage to get the input of this function
+	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
+	local point, parentName, x, y = string.split('\031', _DB[style][identifier])
+	SetPoint(parent or obj, point, parentName, point, x, y)
 end
 
 local savePosition = function(obj, override)
