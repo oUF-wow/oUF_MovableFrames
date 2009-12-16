@@ -418,7 +418,7 @@ do
 				slidHeight =  (data[1]:GetTop() - bottom + 24) - scroll:GetHeight()
 			end
 			if(slidHeight > 0) then
-				slider:SetMinMaxValues(0, 24)
+				slider:SetMinMaxValues(0, slidHeight)
 			else
 				slider:SetMinMaxValues(0, 0)
 			end
