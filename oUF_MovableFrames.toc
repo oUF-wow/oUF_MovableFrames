@@ -1,5 +1,5 @@
 ## Interface: 30300
-## Title: oUF_MovableFrames
+## Title: oUF: MovableFrames
 ## Author: Haste
 ## Version: 1.0
 ## OptionalDeps: oUF
