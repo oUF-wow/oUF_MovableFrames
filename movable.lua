@@ -487,7 +487,6 @@ do
 			scrollchild:SetPoint('TOP', 0, val)
 		end)
 
-
 		opt:SetScript("OnShow", function()
 			return createOrUpdateMadnessOfGodIhateGUIs()
 		end)
