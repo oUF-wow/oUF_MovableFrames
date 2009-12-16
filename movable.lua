@@ -33,6 +33,8 @@ local getPoint = function(obj)
 	local L, R = obj:GetLeft(), obj:GetRight()
 	local T, B = obj:GetTop(), obj:GetBottom()
 	local Cx, Cy = obj:GetCenter()
+	-- Quantum state!
+	if(not L) then return end
 
 	local width, height = UIParent:GetRight(), UIParent:GetTop()
 	local left = width / 3
@@ -177,6 +179,7 @@ do
 
 	getBackdrop = function(obj, isHeader)
 		local header = (isHeader and obj:GetParent())
+		if(not getPoint(header or obj)) then return end
 		if(backdropPool[header or obj]) then return backdropPool[header or obj] end
 
 		local backdrop = CreateFrame"Frame"
@@ -507,7 +510,7 @@ SlashCmdList['OUF_MOVABLEFRAMES'] = function(inp)
 		for k, obj in next, oUF.objects do
 			local style, identifier, isHeader = getObjectInformation(obj)
 			local backdrop = getBackdrop(obj, isHeader)
-			backdrop:Show()
+			if(backdrop) then backdrop:Show() end
 		end
 
 		_LOCK = true
