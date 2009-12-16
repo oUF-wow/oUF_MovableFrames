@@ -73,7 +73,7 @@ local getObjectInformation  = function(obj)
 	-- setting it to Unknown. It will only break if the user has multiple layouts
 	-- spawning the same unit or change between layouts.
 	local style = obj.style or 'Unknown'
-	local identifier = obj.unit
+	local identifier = obj:GetName() or obj.unit
 
 	-- Are we dealing with header units?
 	local isHeader
