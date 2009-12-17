@@ -276,6 +276,7 @@ do
 
 		local createOrUpdateMadnessOfGodIhateGUIs
 		local OnClick = function(self)
+			scroll.value = slider:GetValue()
 			_DB[self.style][self.ident] = nil
 
 			if(not next(_DB[self.style])) then
@@ -293,6 +294,7 @@ do
 		function createOrUpdateMadnessOfGodIhateGUIs()
 			local data = self.data or {}
 
+			local slideHeight = 0
 			local numStyles = 1
 			for style, styleData in next, _DB do
 				if(not data[numStyles]) then
@@ -388,6 +390,7 @@ do
 				box.rows = rows
 
 				local height = (numFrames * 24) - 8
+				slideHeight = slideHeight + height + 16
 				box:SetHeight(height)
 				box:Show()
 
@@ -407,26 +410,14 @@ do
 			end
 
 			self.data = data
-
-			-- clean up this madness... some time
-			local bottom = 0
-			for i=1, #data do
-				if(data[i]:IsShown()) then
-					bottom = data[i]:GetBottom()
-				end
-			end
-
-			local slidHeight = 0
-			if(data[1]:IsShown()) then
-				slidHeight =  (data[1]:GetTop() - bottom + 24) - scroll:GetHeight()
-			end
-			if(slidHeight > 0) then
-				slider:SetMinMaxValues(0, slidHeight)
+			local height = slideHeight - scroll:GetHeight()
+			if(height > 0) then
+				slider:SetMinMaxValues(0, height)
 			else
 				slider:SetMinMaxValues(0, 0)
 			end
 
-			slider:SetValue(slider.value or 0)
+			slider:SetValue(scroll.value or 0)
 		end
 
 		slider:SetWidth(16)
