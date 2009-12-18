@@ -170,6 +170,10 @@ do
 
 	local OnDragStart = function(self)
 		self:StartMoving()
+
+		local frame = self.header or self.obj
+		frame:ClearAllPoints();
+		frame:SetAllPoints(self);
 	end
 
 	local OnDragStop = function(self)
@@ -210,18 +214,11 @@ do
 		backdrop:SetBackdropBorderColor(0, .9, 0)
 		backdrop:SetBackdropColor(0, .9, 0)
 
-		-- Reset our anchors.
-		backdrop:StartMoving()
-		backdrop:StopMovingOrSizing()
-
 		-- Work around the fact that headers with no units displayed are 0 in height.
 		if(header and math.floor(header:GetHeight()) == 0) then
 			local height = header:GetChildren():GetHeight()
 			backdrop:SetHeight(height)
 		end
-
-		(header or obj):ClearAllPoints();
-		(header or obj):SetAllPoints(backdrop);
 
 		backdrop:SetScript("OnDragStart", OnDragStart)
 		backdrop:SetScript("OnDragStop", OnDragStop)
