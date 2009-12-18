@@ -124,6 +124,59 @@ local savePosition = function(obj, override)
 	end
 end
 
+-- Attempt to figure out a more sane name to dispaly.
+local smartName = function(obj, header)
+	if(type(obj) == 'string') then
+		-- Probably what we're after.
+		if(obj:match('_')) then
+			local name = obj:lower()
+			local group, id, subType = name:match('_(%a+)unitbutton(%d+)(%w+)$')
+			if(subType) then
+				return group .. id .. subType
+			end
+
+			-- odds of this being used is _slim_
+			local group, id = name:match('_(%a+)unitbutton(%d+)$')
+			if(id) then
+				return group .. id
+			end
+
+			local group = name:match('_(%a+)')
+			if(group) then
+				return group
+			end
+		else
+			return obj
+		end
+	else
+		if(header) then
+			-- XXX: Check the attributes for a valid description.
+			local name = header:GetName()
+			local group = name:lower():match('_(%a+)')
+			if(group) then
+				return group:gsub('frames?', '')
+			else
+				return name
+			end
+
+			return header:GetName()
+		else
+			local match = (obj.hasChildren and '_(%a+)unitbutton(%d+)$') or '_(%a+)unitbutton(%d+)(%w+)$'
+			local name = obj:GetName()
+			if(name) then
+				local group, id, subType = name:lower():match(match)
+				if(subType) then
+					return group .. id .. subType
+				elseif(id) then
+					return group .. id
+				end
+			else
+				return obj.unit or '<unknown>'
+			end
+		end
+	end
+end
+
 do
 	local frame = CreateFrame"Frame"
 	frame:SetScript("OnEvent", function(self)
@@ -160,12 +213,7 @@ end
 local getBackdrop
 do
 	local OnShow = function(self)
-		if(self.header) then
-			self.name:SetText(self.header:GetName())
-		else
-			local desc = self.obj.unit or self.obj:GetName() or '<unknown>'
-			self.name:SetText(desc)
-		end
+		return self.name:SetText(smartName(self.obj, self.header))
 	end
 
 	local OnDragStart = function(self)
@@ -375,7 +423,7 @@ do
 					local row = rows[numFrames]
 					local point, _, x, y = string.split('\031', points)
 					row.anchor:SetFormattedText('%11s %4s %4s', point, x, y)
-					row.label:SetText(unit)
+					row.label:SetText(smartName(unit))
 
 					row.delete.style = style
 					row.delete.ident = unit
