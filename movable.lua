@@ -542,20 +542,24 @@ SlashCmdList['OUF_MOVABLEFRAMES'] = function(inp)
 		return print"Frames cannot be moved while in combat. Bailing out."
 	end
 
-	if(not _LOCK) then
-		for k, obj in next, oUF.objects do
-			local style, identifier, isHeader = getObjectInformation(obj)
-			local backdrop = getBackdrop(obj, isHeader)
-			if(backdrop) then backdrop:Show() end
-		end
-
-		_LOCK = true
+	if(inp:match("%S+")) then
+		InterfaceOptionsFrame_OpenToCategory'oUF: MovableFrames'
 	else
-		for k, bdrop in next, backdropPool do
-			bdrop:Hide()
-		end
+		if(not _LOCK) then
+			for k, obj in next, oUF.objects do
+				local style, identifier, isHeader = getObjectInformation(obj)
+				local backdrop = getBackdrop(obj, isHeader)
+				if(backdrop) then backdrop:Show() end
+			end
 
-		_LOCK = nil
+			_LOCK = true
+		else
+			for k, bdrop in next, backdropPool do
+				bdrop:Hide()
+			end
+
+			_LOCK = nil
+		end
 	end
 end
 -- It's not in your best interest to disconnect me. Someone could get hurt.
