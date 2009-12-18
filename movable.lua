@@ -265,7 +265,7 @@ do
 		-- Work around the fact that headers with no units displayed are 0 in height.
 		if(header and math.floor(header:GetHeight()) == 0) then
 			local height = header:GetChildren():GetHeight()
-			backdrop:SetHeight(height)
+			header:SetHeight(height)
 		end
 
 		backdrop:SetScript("OnDragStart", OnDragStart)
