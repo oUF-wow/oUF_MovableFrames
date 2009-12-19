@@ -249,8 +249,7 @@ do
 		backdrop:SetScript("OnShow", OnShow)
 
 		local name = backdrop:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		name:SetPoint"LEFT"
-		name:SetPoint"RIGHT"
+		name:SetPoint"CENTER"
 		name:SetJustifyH"CENTER"
 		name:SetFont(GameFontNormal:GetFont(), 12)
 		name:SetTextColor(1, 1, 1)
