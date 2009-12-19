@@ -130,18 +130,18 @@ local smartName = function(obj, header)
 		-- Probably what we're after.
 		if(obj:match('_')) then
 			local name = obj:lower()
-			local group, id, subType = name:match('_(%a+)unitbutton(%d+)(%w+)$')
+			local group, id, subType = name:match('_([%a%d_]+)unitbutton(%d+)(%w+)$')
 			if(subType) then
 				return group .. id .. subType
 			end
 
 			-- odds of this being used is _slim_
-			local group, id = name:match('_(%a+)unitbutton(%d+)$')
+			local group, id = name:match('_([%a%d_]+)unitbutton(%d+)$')
 			if(id) then
 				return group .. id
 			end
 
-			local group = name:match('_(%a+)')
+			local group = name:match('_([%a%d_]+)')
 			if(group) then
 				return group
 			end
@@ -152,7 +152,7 @@ local smartName = function(obj, header)
 		if(header) then
 			-- XXX: Check the attributes for a valid description.
 			local name = header:GetName()
-			local group = name:lower():match('_(%a+)')
+			local group = name:lower():match('_([%a%d_]+)')
 			if(group) then
 				return group:gsub('frames?', '')
 			else
@@ -161,7 +161,7 @@ local smartName = function(obj, header)
 
 			return header:GetName()
 		else
-			local match = (obj.hasChildren and '_(%a+)unitbutton(%d+)$') or '_(%a+)unitbutton(%d+)(%w+)$'
+			local match = (obj.hasChildren and '_([%a_]+)unitbutton(%d+)$') or '_([%a_]+)unitbutton(%d+)(%w+)$'
 			local name = obj:GetName()
 			if(name) then
 				local group, id, subType = name:lower():match(match)
@@ -170,9 +170,9 @@ local smartName = function(obj, header)
 				elseif(id) then
 					return group .. id
 				end
-			else
-				return obj.unit or '<unknown>'
 			end
+
+			return obj.unit or '<unknown>'
 		end
 	end
 end
