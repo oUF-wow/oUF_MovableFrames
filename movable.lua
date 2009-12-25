@@ -25,49 +25,59 @@ end
 
 local backdropPool = {}
 
--- XXX: Should possibly just be replaced with something that steals the points
--- of the anchor, as it does most of the work for us already.
-local getPoint = function(obj)
-	-- VARIABLE NAMES OF DOOM!
-	local S = obj:GetEffectiveScale()
-	local L, R = obj:GetLeft(), obj:GetRight()
-	local T, B = obj:GetTop(), obj:GetBottom()
-	local Cx, Cy = obj:GetCenter()
-	-- Quantum state!
-	if(not L) then return end
+getPoint = function(obj, anchor)
+	if(not anchor) then
+		local UIx, UIy = UIParent:GetCenter()
+		local Ox, Oy = obj:GetCenter()
 
-	local width, height = UIParent:GetRight(), UIParent:GetTop()
-	local left = width / 3
-	local right = width - left
-	local bottom = height / 3
-	local top = height - bottom
+		-- Frame doesn't really have a positon yet.
+		if(not Ox) then return end
 
-	local point, x, y
-	if(Cx >= left and not(Cx <= right)) then
-		point = 'RIGHT'
-		x = R - width
-	elseif(Cx <= left) then
-		point = 'LEFT'
-		x = L
+		local UIS = UIParent:GetEffectiveScale()
+		local OS = obj:GetEffectiveScale()
+
+		local UIWidth, UIHeight = UIParent:GetRight(), UIParent:GetTop()
+
+		local LEFT = UIWidth / 3
+		local RIGHT = UIWidth * 2 / 3
+
+		local point, x, y
+		if(Ox >= RIGHT) then
+			point = 'RIGHT'
+			x = obj:GetRight() - UIWidth
+		elseif(Ox <= LEFT) then
+			point = 'LEFT'
+			x = obj:GetLeft()
+		else
+			x = Ox - UIx
+		end
+
+		local BOTTOM = UIHeight / 3
+		local TOP = UIHeight * 2 / 3
+
+		if(Oy >= TOP) then
+			point = 'TOP' .. (point or '')
+			y = obj:GetTop() - UIHeight
+		elseif(Oy <= BOTTOM) then
+			point = 'BOTTOM' .. (point or '')
+			y = obj:GetBottom()
+		else
+			if(not point) then point = 'CENTER' end
+			y = Oy - UIy
+		end
+
+		return string.format(
+			'%s\031%s\031%d\031%d',
+			point, 'UIParent', round(x * UIS / OS),  round(y * UIS / OS)
+		)
 	else
-		x = Cx - (width / 2)
-	end
+		local point, parent, _, x, y = anchor:GetPoint()
 
-	if(Cy > bottom and Cy < top) then
-		if(not point) then point = 'CENTER' end
-		y = Cy - (height / 2)
-	elseif(Cy >= bottom and not(Cy <= top)) then
-		point = 'TOP' .. (point or '')
-		y = T - height
-	elseif(Cy <= bottom) then
-		y = B
-		point = 'BOTTOM' .. (point or '')
+		return string.format(
+			'%s\031%s\031%d\031%d',
+			point, 'UIParent', round(x), round(y)
+		)
 	end
-
-	return string.format(
-		'%s\031%s\031%d\031%d',
-		point, 'UIParent', round(x * S), round(y * S)
-	)
 end
 
 local getObjectInformation  = function(obj)
@@ -97,7 +107,7 @@ local function restorePosition(obj)
 	-- We've not saved any custom position for this style.
 	if(not _DB[style] or not _DB[style][identifier]) then return end
 
-	local scale = UIParent:GetScale()
+	local scale = obj:GetScale()
 	local parent = (isHeader and obj:GetParent())
 	local SetPoint = getmetatable(parent or obj).__index.SetPoint;
 
@@ -113,14 +123,14 @@ local function restorePosition(obj)
 	SetPoint(parent or obj, point, parentName, point, x / scale, y / scale)
 end
 
-local savePosition = function(obj, override)
+local savePosition = function(obj, anchor)
 	local style, identifier, isHeader = getObjectInformation(obj)
 	if(not _DB[style]) then _DB[style] = {} end
 
-	if(isHeader and not override) then
-		_DB[style][identifier] = getPoint(obj:GetParent())
+	if(isHeader) then
+		_DB[style][identifier] = getPoint(obj:GetParent(), anchor)
 	else
-		_DB[style][identifier] = getPoint(override or obj)
+		_DB[style][identifier] = getPoint(obj, anchor)
 	end
 end
 
@@ -226,20 +236,20 @@ do
 
 	local OnDragStop = function(self)
 		self:StopMovingOrSizing()
-		savePosition(self.obj, self.header and self)
+		savePosition(self.obj, self)
 	end
 
 	getBackdrop = function(obj, isHeader)
 		local header = (isHeader and obj:GetParent())
-		if(not getPoint(header or obj)) then return end
+		if(not (header or obj):GetCenter()) then return end
 		if(backdropPool[header or obj]) then return backdropPool[header or obj] end
 
 		local backdrop = CreateFrame"Frame"
+		backdrop:SetParent(UIParent)
 		backdrop:Hide()
 
 		backdrop:SetBackdrop(_BACKDROP)
 		backdrop:SetFrameStrata"TOOLTIP"
-		backdrop:SetScale(obj:GetEffectiveScale())
 		backdrop:SetAllPoints(header or obj)
 
 		backdrop:EnableMouse(true)
