@@ -25,7 +25,7 @@ end
 
 local backdropPool = {}
 
-getPoint = function(obj, anchor)
+local getPoint = function(obj, anchor)
 	if(not anchor) then
 		local UIx, UIy = UIParent:GetCenter()
 		local Ox, Oy = obj:GetCenter()
@@ -135,51 +135,115 @@ local savePosition = function(obj, anchor)
 end
 
 -- Attempt to figure out a more sane name to dispaly.
-local smartName = function(obj, header)
-	if(type(obj) == 'string') then
-		-- Probably what we're after.
-		if(obj:match('_')) then
-			local name = obj:lower()
-			local group, id, subType = name:match('_([%a%d_]+)unitbutton(%d+)(%w+)$')
-			if(subType) then
-				return group .. id .. subType
+local smartName
+do
+	local validNames = {
+		'player',
+		'target',
+		'focus',
+		'raid',
+		'pet',
+		'party',
+		'maintank',
+		'mainassist',
+		'arena',
+	}
+
+	local patterns = {
+		'(.-)_([%a%d_]+)unitbutton(%d+)(%w+)$',
+		'(.-)_([%a%d_]+)unitbutton(%d+)$',
+		'(.-)_([%a%d_]+)$',
+	}
+
+	local validName = function(smartName)
+		if(type(smartName) == 'string') then
+			if(smartName == 'mt') then
+				return 'maintank'
 			end
 
-			-- odds of this being used is _slim_
-			local group, id = name:match('_([%a%d_]+)unitbutton(%d+)$')
-			if(id) then
-				return group .. id
+			for _, v in next, validNames do
+				if(v == smartName) then
+					return smartName
+				end
 			end
 
-			local group = name:match('_([%a%d_]+)')
-			if(group) then
-				return group
+			if(
+				smartName:match'^party%d?$' or
+				smartName:match'^arena%d?$' or
+				smartName:match'^boss%d?$' or
+				smartName:match'^partypet%d?$' or
+				smartName:match'^raid%d?%d?$' or
+				smartName:match'%w+target$' or
+				smartName:match'%w+pet$'
+			) then
+				return smartName
 			end
-		else
-			return obj
 		end
-	else
-		if(header) then
-			-- XXX: Check the attributes for a valid description.
-			local name = header:GetName()
-			local group = name:lower():match('_([%a%d_]+)')
-			if(group) then
-				return group:gsub('frames?', '')
-			else
-				return name
-			end
+	end
 
-			return header:GetName()
+	-- 5AM coding hooo!
+	local function guessName(name, ...)
+		local n = select('#', ...)
+
+		name = validName(name) or tonumber(name)
+		if(not name and ...) then
+			return guessName(...)
+		elseif(not (name or ...)) then
+			return
+		end
+
+		local o
+		for i=1, n do
+			local inp = select(i, ...)
+			if(not (validName(inp) or tonumber(inp))) then
+				o = i
+				break;
+			end
+		end
+
+		if(not o) then
+			return name, guessName(...)
+		elseif(o == 1) then
+			return name, guessName(select(2, ...))
+		end
+
+		for i=1, o - 1 do
+			name = name .. select(i, ...)
+		end
+
+		return name, guessName(select(o, ...))
+	end
+
+	local cleanName = function(name)
+		return name:gsub('ouf_', ''):gsub('frames?', '')
+	end
+
+	local smartString = function(name)
+		local lname = name:lower()
+		local n = validName(cleanName(lname))
+		if(n) then
+			return n
+		end
+
+		for _, pattern in ipairs(patterns) do
+			n = string.join('', tostringall(guessName(lname:match(pattern))))
+			if(n ~= '') then
+				return n
+			end
+		end
+
+		return name
+	end
+
+	smartName = function(obj, header)
+		if(type(obj) == 'string') then
+			return smartString(obj)
+		elseif(header) then
+			return smartString(header:GetName())
 		else
-			local match = (obj.hasChildren and '_([%a_]+)unitbutton(%d+)$') or '_([%a_]+)unitbutton(%d+)(%w+)$'
 			local name = obj:GetName()
 			if(name) then
-				local group, id, subType = name:lower():match(match)
-				if(subType) then
-					return group .. id .. subType
-				elseif(id) then
-					return group .. id
-				end
+				return smartString(name)
 			end
 
 			return obj.unit or '<unknown>'
