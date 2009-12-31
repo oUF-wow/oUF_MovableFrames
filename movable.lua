@@ -137,6 +137,7 @@ end
 -- Attempt to figure out a more sane name to dispaly.
 local smartName
 do
+
 	local validNames = {
 		'player',
 		'target',
@@ -147,12 +148,6 @@ do
 		'maintank',
 		'mainassist',
 		'arena',
-	}
-
-	local patterns = {
-		'(.-)_([%a%d_]+)unitbutton(%d+)(%w+)$',
-		'(.-)_([%a%d_]+)unitbutton(%d+)$',
-		'(.-)_([%a%d_]+)$',
 	}
 
 	local validName = function(smartName)
@@ -180,61 +175,34 @@ do
 				smartName:match'^raid%d?%d?$' or
 				smartName:match'%w+target$' or
 				smartName:match'%w+pet$'
-			) then
+				) then
 				return smartName
 			end
 		end
 	end
 
-	-- 5AM coding hooo!
-	local function guessName(name, ...)
+	local function guessName(...)
+		local name = validName(select(1, ...))
+
 		local n = select('#', ...)
-
-		name = validName(name)
-		if(not name and ...) then
-			return guessName(...)
-		elseif(not (name or ...)) then
-			return
-		end
-
-		local o
-		for i=1, n do
-			local inp = select(i, ...)
-			if(not validName(inp)) then
-				o = i
-				break;
+		if(n > 1) then
+			for i=2, n do
+				local inp = validName(select(i, ...))
+				if(inp) then
+					name = (name or '') .. inp
+				end
 			end
 		end
 
-		if(not o) then
-			return name, guessName(...)
-		elseif(o == 1) then
-			return name, guessName(select(2, ...))
-		end
-
-		for i=1, o - 1 do
-			name = name .. select(i, ...)
-		end
-
-		return name, guessName(select(o, ...))
-	end
-
-	local cleanName = function(name)
-		return name:gsub('ouf_', ''):gsub('frames?', '')
+		return name
 	end
 
 	local smartString = function(name)
-		local lname = name:lower()
-		local n = validName(cleanName(lname))
+		-- Here comes the substitute train!
+		local n = name:gsub('(%l)(%u)', '%1_%2'):gsub('([%l%u])(%d)', '%1_%2_'):lower()
+		n = guessName(string.split('_', n))
 		if(n) then
 			return n
-		end
-
-		for _, pattern in ipairs(patterns) do
-			n = string.join('', tostringall(guessName(lname:match(pattern))))
-			if(n ~= '') then
-				return n
-			end
 		end
 
 		return name
