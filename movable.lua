@@ -156,6 +156,11 @@ do
 	}
 
 	local validName = function(smartName)
+		-- Not really a valid name, but we'll accept it for simplicities sake.
+		if(tonumber(smartName)) then
+			return smartName
+		end
+
 		if(type(smartName) == 'string') then
 			if(smartName == 'mt') then
 				return 'maintank'
@@ -185,7 +190,7 @@ do
 	local function guessName(name, ...)
 		local n = select('#', ...)
 
-		name = validName(name) or tonumber(name)
+		name = validName(name)
 		if(not name and ...) then
 			return guessName(...)
 		elseif(not (name or ...)) then
@@ -195,7 +200,7 @@ do
 		local o
 		for i=1, n do
 			local inp = select(i, ...)
-			if(not (validName(inp) or tonumber(inp))) then
+			if(not validName(inp)) then
 				o = i
 				break;
 			end
