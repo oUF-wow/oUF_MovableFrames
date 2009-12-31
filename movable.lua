@@ -137,7 +137,7 @@ end
 -- Attempt to figure out a more sane name to dispaly.
 local smartName
 do
-
+	local nameCache = {}
 	local validNames = {
 		'player',
 		'target',
@@ -198,10 +198,15 @@ do
 	end
 
 	local smartString = function(name)
+		if(nameCache[name]) then
+			return nameCache[name]
+		end
+
 		-- Here comes the substitute train!
 		local n = name:gsub('(%l)(%u)', '%1_%2'):gsub('([%l%u])(%d)', '%1_%2_'):lower()
 		n = guessName(string.split('_', n))
 		if(n) then
+			nameCache[name] = n
 			return n
 		end
 
