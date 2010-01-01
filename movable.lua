@@ -112,6 +112,8 @@ local restoreDefaultPosition = function(style, identifier)
 		if(fStyle == style and fIdentifier == identifier) then
 			obj = frame
 			isHeader = fIsHeader
+
+			break
 		end
 	end
 
