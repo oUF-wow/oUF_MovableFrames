@@ -131,6 +131,12 @@ local restoreDefaultPosition = function(style, identifier)
 		local point, parentName, x, y = string.split('\031', _DB.__INITIAL[style][identifier])
 		SetPoint(parent or obj, point, parentName, point, x / scale, y / scale)
 
+		local backdrop = backdropPool[parent or obj]
+		if(backdrop) then
+			backdrop:ClearAllPoints()
+			backdrop:SetAllPoints(parent or obj)
+		end
+
 		-- We don't need this anymore
 		_DB.__INITIAL[style][identifier] = nil
 	end
