@@ -139,6 +139,9 @@ local restoreDefaultPosition = function(style, identifier)
 
 		-- We don't need this anymore
 		_DB.__INITIAL[style][identifier] = nil
+		if(not next(_DB.__INITIAL[style])) then
+			_DB[identifier][style] = nil
+		end
 	end
 end
 
@@ -182,9 +185,6 @@ local saveDefaultPosition = function(obj)
 		end
 
 		_DB.__INITIAL[style][identifier] = point
-		if(not next(_DB.__INITIAL[style])) then
-			_DB[identifier][style] = nil
-		end
 	end
 end
 
