@@ -102,6 +102,38 @@ local getObjectInformation  = function(obj)
 	return style, identifier, isHeader
 end
 
+local restoreDefaultPosition = function(style, identifier)
+	-- We've not saved any default position for this style.
+	if(not _DB.__INITIAL or not _DB.__INITIAL[style] or not _DB.__INITIAL[style][identifier]) then return end
+
+	local obj, isHeader
+	for _, frame in next, oUF.objects do
+		local fStyle, fIdentifier, fIsHeader = getObjectInformation(frame)
+		if(fStyle == style and fIdentifier == identifier) then
+			obj = frame
+			isHeader = fIsHeader
+		end
+	end
+
+	if(obj) then
+		local scale = obj:GetScale()
+		local parent = obj:GetParent()
+		local SetPoint = getmetatable(parent or obj).__index.SetPoint;
+
+		if(parent == UIParent) then
+			parent = nil
+		end
+
+		(parent or obj):ClearAllPoints()
+
+		local point, parentName, x, y = string.split('\031', _DB.__INITIAL[style][identifier])
+		SetPoint(parent or obj, point, parentName, point, x / scale, y / scale)
+
+		-- We don't need this anymore
+		_DB.__INITIAL[style][identifier] = nil
+	end
+end
+
 local function restorePosition(obj)
 	local style, identifier, isHeader = getObjectInformation(obj)
 	-- We've not saved any custom position for this style.
@@ -121,6 +153,31 @@ local function restorePosition(obj)
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
 	local point, parentName, x, y = string.split('\031', _DB[style][identifier])
 	SetPoint(parent or obj, point, parentName, point, x / scale, y / scale)
+end
+
+local saveDefaultPosition = function(obj)
+	local style, identifier, isHeader = getObjectInformation(obj)
+	if(not _DB.__INITIAL) then
+		_DB.__INITIAL = {}
+	end
+
+	if(not _DB.__INITIAL[style]) then
+		_DB.__INITIAL[style] = {}
+	end
+
+	if(not _DB.__INITIAL[style][identifier]) then
+		local point
+		if(isHeader) then
+			point = getPoint(obj:GetParent())
+		else
+			point = getPoint(obj)
+		end
+
+		_DB.__INITIAL[style][identifier] = point
+		if(not next(_DB.__INITIAL[self.style])) then
+			_DB[self.style] = nil
+		end
+	end
 end
 
 local savePosition = function(obj, anchor)
@@ -269,6 +326,7 @@ do
 	end
 
 	local OnDragStart = function(self)
+		saveDefaultPosition(self.obj)
 		self:StartMoving()
 
 		local frame = self.header or self.obj
@@ -379,6 +437,8 @@ do
 				_DB[self.style] = nil
 			end
 
+			restoreDefaultPosition(self.style, self.ident)
+
 			return createOrUpdateMadnessOfGodIhateGUIs()
 		end
 
@@ -393,110 +453,112 @@ do
 			local slideHeight = 0
 			local numStyles = 1
 			for style, styleData in next, _DB do
-				if(not data[numStyles]) then
-					local box = CreateFrame('Frame', nil, scrollchild)
-					box:SetBackdrop(backdrop)
-					box:SetBackdropColor(.1, .1, .1, .5)
-					box:SetBackdropBorderColor(.3, .3, .3, 1)
+				if(style ~= '__INITIAL') then
+					if(not data[numStyles]) then
+						local box = CreateFrame('Frame', nil, scrollchild)
+						box:SetBackdrop(backdrop)
+						box:SetBackdropColor(.1, .1, .1, .5)
+						box:SetBackdropBorderColor(.3, .3, .3, 1)
 
-					if(numStyles == 1) then
-						box:SetPoint('TOP', 0, -12)
-					else
-						box:SetPoint('TOP', data[numStyles - 1], 'BOTTOM', 0, -16)
-					end
-					box:SetPoint'LEFT'
-					box:SetPoint('RIGHT', -30, 0)
-
-					local title = box:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
-					title:SetPoint('BOTTOMLEFT', box, 'TOPLEFT', 8, 0)
-					box.title = title
-
-					data[numStyles] = box
-				end
-
-				-- Fetch the box and update it
-				local box = data[numStyles]
-				box.title:SetText(style)
-
-				local rows = box.rows or {}
-				local numFrames = 1
-				for unit, points in next, styleData do
-					if(not rows[numFrames]) then
-						local row = CreateFrame('Button', nil, box)
-
-						row:SetBackdrop(backdrop)
-						row:SetBackdropBorderColor(.3, .3, .3)
-						row:SetBackdropColor(.1, .1, .1, .5)
-
-						if(numFrames == 1) then
-							row:SetPoint('TOP', 0, -8)
+						if(numStyles == 1) then
+							box:SetPoint('TOP', 0, -12)
 						else
-							row:SetPoint('TOP', rows[numFrames-1], 'BOTTOM')
+							box:SetPoint('TOP', data[numStyles - 1], 'BOTTOM', 0, -16)
+						end
+						box:SetPoint'LEFT'
+						box:SetPoint('RIGHT', -30, 0)
+
+						local title = box:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+						title:SetPoint('BOTTOMLEFT', box, 'TOPLEFT', 8, 0)
+						box.title = title
+
+						data[numStyles] = box
+					end
+
+					-- Fetch the box and update it
+					local box = data[numStyles]
+					box.title:SetText(style)
+
+					local rows = box.rows or {}
+					local numFrames = 1
+					for unit, points in next, styleData do
+						if(not rows[numFrames]) then
+							local row = CreateFrame('Button', nil, box)
+
+							row:SetBackdrop(backdrop)
+							row:SetBackdropBorderColor(.3, .3, .3)
+							row:SetBackdropColor(.1, .1, .1, .5)
+
+							if(numFrames == 1) then
+								row:SetPoint('TOP', 0, -8)
+							else
+								row:SetPoint('TOP', rows[numFrames-1], 'BOTTOM')
+							end
+
+							row:SetPoint('LEFT', 6, 0)
+							row:SetPoint('RIGHT', -25, 0)
+							row:SetHeight(24)
+
+							local anchor = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							anchor:SetPoint('RIGHT', -10, 0)
+							anchor:SetPoint('TOP', 0, -4)
+							anchor:SetPoint'BOTTOM'
+							anchor:SetJustifyH'RIGHT'
+							row.anchor = anchor
+
+							local label = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							label:SetPoint('LEFT', 10, 0)
+							label:SetPoint('RIGHT', anchor)
+							label:SetPoint('TOP', 0, -4)
+							label:SetPoint'BOTTOM'
+							label:SetJustifyH'LEFT'
+							row.label = label
+
+							local delete = CreateFrame("Button", nil, row)
+							delete:SetWidth(16)
+							delete:SetHeight(16)
+							delete:SetPoint('LEFT', row, 'RIGHT')
+
+							delete:SetNormalTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Up]]
+							delete:SetPushedTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Down]]
+							delete:SetHighlightTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]]
+
+							delete:SetScript("OnClick", OnClick)
+							delete:SetScript("OnEnter", OnEnter)
+							delete:SetScript("OnLeave", GameTooltip_Hide)
+							row.delete = delete
+
+							rows[numFrames] = row
 						end
 
-						row:SetPoint('LEFT', 6, 0)
-						row:SetPoint('RIGHT', -25, 0)
-						row:SetHeight(24)
+						-- Fetch row and update it:
+						local row = rows[numFrames]
+						local point, _, x, y = string.split('\031', points)
+						row.anchor:SetFormattedText('%11s %4s %4s', point, x, y)
+						row.label:SetText(smartName(unit))
 
-						local anchor = row:CreateFontString(nil, nil, 'GameFontHighlight')
-						anchor:SetPoint('RIGHT', -10, 0)
-						anchor:SetPoint('TOP', 0, -4)
-						anchor:SetPoint'BOTTOM'
-						anchor:SetJustifyH'RIGHT'
-						row.anchor = anchor
+						row.delete.style = style
+						row.delete.ident = unit
+						row:Show()
 
-						local label = row:CreateFontString(nil, nil, 'GameFontHighlight')
-						label:SetPoint('LEFT', 10, 0)
-						label:SetPoint('RIGHT', anchor)
-						label:SetPoint('TOP', 0, -4)
-						label:SetPoint'BOTTOM'
-						label:SetJustifyH'LEFT'
-						row.label = label
-
-						local delete = CreateFrame("Button", nil, row)
-						delete:SetWidth(16)
-						delete:SetHeight(16)
-						delete:SetPoint('LEFT', row, 'RIGHT')
-
-						delete:SetNormalTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Up]]
-						delete:SetPushedTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Down]]
-						delete:SetHighlightTexture[[Interface\Buttons\UI-Panel-MinimizeButton-Highlight]]
-
-						delete:SetScript("OnClick", OnClick)
-						delete:SetScript("OnEnter", OnEnter)
-						delete:SetScript("OnLeave", GameTooltip_Hide)
-						row.delete = delete
-
-						rows[numFrames] = row
+						numFrames = numFrames + 1
 					end
 
-					-- Fetch row and update it:
-					local row = rows[numFrames]
-					local point, _, x, y = string.split('\031', points)
-					row.anchor:SetFormattedText('%11s %4s %4s', point, x, y)
-					row.label:SetText(smartName(unit))
+					box.rows = rows
 
-					row.delete.style = style
-					row.delete.ident = unit
-					row:Show()
+					local height = (numFrames * 24) - 8
+					slideHeight = slideHeight + height + 16
+					box:SetHeight(height)
+					box:Show()
 
-					numFrames = numFrames + 1
+					-- Hide left over rows we aren't using:
+					while(rows[numFrames]) do
+						rows[numFrames]:Hide()
+						numFrames = numFrames + 1
+					end
+
+					numStyles = numStyles + 1
 				end
-
-				box.rows = rows
-
-				local height = (numFrames * 24) - 8
-				slideHeight = slideHeight + height + 16
-				box:SetHeight(height)
-				box:Show()
-
-				-- Hide left over rows we aren't using:
-				while(rows[numFrames]) do
-					rows[numFrames]:Hide()
-					numFrames = numFrames + 1
-				end
-
-				numStyles = numStyles + 1
 			end
 
 			-- Hide left over boxes we aren't using:
