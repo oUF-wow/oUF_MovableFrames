@@ -174,8 +174,8 @@ local saveDefaultPosition = function(obj)
 		end
 
 		_DB.__INITIAL[style][identifier] = point
-		if(not next(_DB.__INITIAL[self.style])) then
-			_DB[self.style] = nil
+		if(not next(_DB.__INITIAL[style])) then
+			_DB[identifier][style] = nil
 		end
 	end
 end
