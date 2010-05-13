@@ -90,9 +90,8 @@ local getObjectInformation  = function(obj)
 	-- Are we dealing with header units?
 	local isHeader
 	local parent = obj:GetParent()
-	-- Check for both as we can hit parents with initialConfigFunction, and
-	-- SetManyAttributes alone is kinda up to the authors.
-	if(parent and parent.initialConfigFunction and parent.SetManyAttributes) then
+
+	if(parent and parent.initialConfigFunction and (parent.SetManyAttributes or parent.style)) then
 		isHeader = true
 
 		-- These always have a name, so we might as well abuse it.
