@@ -139,7 +139,7 @@ local restoreDefaultPosition = function(style, identifier)
 		-- We don't need this anymore
 		_DB.__INITIAL[style][identifier] = nil
 		if(not next(_DB.__INITIAL[style])) then
-			_DB[style][identifier] = nil
+			_DB[style] = nil
 		end
 	end
 end
