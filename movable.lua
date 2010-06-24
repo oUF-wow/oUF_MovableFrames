@@ -145,6 +145,7 @@ local restoreDefaultPosition = function(style, identifier)
 end
 
 local function restorePosition(obj)
+	if(InCombatLockdown()) then return end
 	local style, identifier, isHeader = getObjectInformation(obj)
 	-- We've not saved any custom position for this style.
 	if(not _DB[style] or not _DB[style][identifier]) then return end
