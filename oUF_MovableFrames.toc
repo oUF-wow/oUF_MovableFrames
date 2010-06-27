@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## Title: oUF: MovableFrames
 ## Author: Haste
-## Version: 1.8
+## Version: 1.9
 ## OptionalDeps: oUF
 ## X-eMail: troeks@gmail.com
 ## SavedVariables: bb08df87101dd7f2161e5b77cf750f753c58ef1b
