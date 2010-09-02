@@ -296,7 +296,7 @@ end
 
 do
 	local frame = CreateFrame"Frame"
-	frame:SetScript("OnEvent", function(self)
+	frame:SetScript("OnEvent", function(self, event)
 		return self[event](self)
 	end)
 
