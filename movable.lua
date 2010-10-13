@@ -158,7 +158,7 @@ local function restorePosition(obj)
 	-- Guess I've never experienced that as these are usually wrapped in do end
 	-- statements.
 	(parent or obj).SetPoint = restorePosition;
-	(parent or obj):ClearAllPoints();
+	(parent or obj):ClearAllPoints()
 
 	-- damn it Blizzard, _how_ did you manage to get the input of this function
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
