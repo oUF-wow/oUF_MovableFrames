@@ -311,7 +311,6 @@ do
 
 		oUF:RegisterInitCallback(restorePosition)
 		self:UnregisterEvent"VARIABLES_LOADED"
-		self.VARIABLES_LOADED = nil
 	end
 	frame:RegisterEvent"VARIABLES_LOADED"
 
