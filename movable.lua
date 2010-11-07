@@ -407,9 +407,7 @@ do
 		subtitle:SetNonSpaceWrap(true)
 		subtitle:SetWordWrap(true)
 		subtitle:SetJustifyH'LEFT'
-		subtitle:SetText('Note that the initial frame position set by layouts are currently'
-		.. ' not saved. This means that a reload of the UI is required to correctly reset'
-		.. ' the position after deleting an element.')
+		subtitle:SetText('Type /omf to toggle frame anchors.')
 
 		local scroll = CreateFrame("ScrollFrame", nil, self)
 		scroll:SetPoint('TOPLEFT', subtitle, 'BOTTOMLEFT', 0, -8)
