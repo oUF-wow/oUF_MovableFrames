@@ -1,5 +1,5 @@
-local _, ns = ...
-local oUF = ns.oUF or oUF
+local _NAME, _NS = ...
+local oUF = _NS.oUF or oUF
 
 assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
 
@@ -651,8 +651,21 @@ do
 	InterfaceOptions_AddCategory(opt)
 end
 
-SLASH_OUF_MOVABLEFRAMES1 = '/omf'
-SlashCmdList['OUF_MOVABLEFRAMES'] = function(inp)
+-- I could use the title field in the TOC, but people tend to put color and
+-- other shit there, so we'll just use the folder name:
+local slashGlobal = _NAME:gsub('%s+', '_'):gsub('[^%a%d_]+', ''):upper()
+slashGlobal = slashGlobal .. '_OMF'
+
+local slashList = GetAddOnMetadata(_NAME, 'X-SlashCmdList'):gsub('%s+', '')
+local handleCmds = function(...)
+	for i=1, select('#', ...) do
+		local cmd = select(i, ...)
+		_G['SLASH_' ..slashGlobal .. i] = cmd
+	end
+end
+handleCmds(string.split(',', slashList))
+
+SlashCmdList[slashGlobal] = function(inp)
 	if(InCombatLockdown()) then
 		return print"Frames cannot be moved while in combat. Bailing out."
 	end
