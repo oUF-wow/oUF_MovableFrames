@@ -590,20 +590,42 @@ do
 							row:SetPoint('RIGHT', -25, 0)
 							row:SetHeight(24)
 
-							local anchor = row:CreateFontString(nil, nil, 'GameFontHighlight')
-							anchor:SetPoint('RIGHT', -10, 0)
-							anchor:SetPoint('TOP', 0, -4)
-							anchor:SetPoint'BOTTOM'
-							anchor:SetJustifyH'RIGHT'
-							row.anchor = anchor
+							-- Notice how these are anchored right to left. Initially when I
+							-- implemented these, I swapped X and Y positioning. It was really
+							-- fun to debug!
+							local scaleLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							scaleLabel:SetPoint('TOP', 0, -4)
+							scaleLabel:SetPoint('RIGHT', -10, 0)
+							scaleLabel:SetPoint'BOTTOM'
+							scaleLabel:SetJustifyH'RIGHT'
+							row.scaleLabel = scaleLabel
 
-							local label = row:CreateFontString(nil, nil, 'GameFontHighlight')
-							label:SetPoint('LEFT', 10, 0)
-							label:SetPoint('RIGHT', anchor)
-							label:SetPoint('TOP', 0, -4)
-							label:SetPoint'BOTTOM'
-							label:SetJustifyH'LEFT'
-							row.label = label
+							local yLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							yLabel:SetPoint('RIGHT', scaleLabel, 'LEFT', -15, 0)
+							yLabel:SetText'-777'
+							yLabel:SetJustifyH'RIGHT'
+							yLabel:SetWidth(yLabel:GetWidth())
+							row.yLabel = yLabel
+
+							local xLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							xLabel:SetPoint('RIGHT', yLabel, 'LEFT', -15, 0)
+							xLabel:SetWidth(yLabel:GetWidth())
+							xLabel:SetJustifyH'LEFT'
+							row.xLabel = xLabel
+
+							local pointLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
+							pointLabel:SetPoint('RIGHT', xLabel, 'LEFT', -5, 0)
+							pointLabel:SetJustifyH'CENTER'
+							pointLabel:SetText'BOTTOMRIGHT'
+							pointLabel:SetWidth(pointLabel:GetWidth())
+							row.pointLabel = pointLabel
+
+							local unitLabel= row:CreateFontString(nil, nil, 'GameFontHighlight')
+							unitLabel:SetPoint('LEFT', 10, 0)
+							unitLabel:SetPoint('TOP', 0, -4)
+							unitLabel:SetPoint'BOTTOM'
+							unitLabel:SetJustifyH'LEFT'
+							row.unitLabel = unitLabel
 
 							local delete = CreateFrame("Button", nil, row)
 							delete:SetWidth(16)
@@ -625,8 +647,11 @@ do
 						-- Fetch row and update it:
 						local row = rows[numFrames]
 						local point, _, x, y, s = string.split('\031', points)
-						row.anchor:SetFormattedText('%11s %4s %4s %.2fx', point, x, y, s or 1)
-						row.label:SetText(smartName(unit))
+						row.pointLabel:SetText(point)
+						row.scaleLabel:SetFormattedText('%.2fx', s or 1)
+						row.xLabel:SetText(x)
+						row.yLabel:SetText(y)
+						row.unitLabel:SetText(smartName(unit))
 
 						row.delete.style = style
 						row.delete.ident = unit
