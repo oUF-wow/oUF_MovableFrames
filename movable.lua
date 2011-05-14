@@ -38,9 +38,8 @@ local getPoint = function(obj, anchor)
 		-- Frame doesn't really have a positon yet.
 		if(not Ox) then return end
 
-		local UIS = UIParent:GetEffectiveScale()
-		local OES = obj:GetEffectiveScale()
 		local OS = obj:GetScale()
+		Ox, Oy = Ox * OS, Oy * OS
 
 		local UIWidth, UIHeight = UIParent:GetRight(), UIParent:GetTop()
 
@@ -74,7 +73,7 @@ local getPoint = function(obj, anchor)
 
 		return string.format(
 			'%s\031%s\031%d\031%d\031\%.3f',
-			point, 'UIParent', x * UIS / OES,  y * UIS / OES, OS
+			point, 'UIParent', x,  y, OS
 		)
 	else
 		local point, parent, _, x, y = anchor:GetPoint()
@@ -129,14 +128,13 @@ local restoreDefaultPosition = function(style, identifier)
 
 	if(obj) then
 		local target = isHeader or obj
-		local SetPoint = getmetatable(target).__index.SetPoint;
 
 		target:ClearAllPoints()
 		local point, parentName, x, y, scale = string.split('\031', _DB.__INITIAL[style][identifier])
 		if(not scale) then scale = 1 end
 
-		target:SetScale(scale)
-		SetPoint(target, point, parentName, point, x / scale, y / scale)
+		target:_SetScale(scale)
+		target:_SetPoint(point, parentName, point, x, y)
 
 		local backdrop = backdropPool[target]
 		if(backdrop) then
@@ -158,24 +156,28 @@ local function restorePosition(obj)
 	-- We've not saved any custom position for this style.
 	if(not _DB[style] or not _DB[style][identifier]) then return end
 
-	local scale = obj:GetScale()
 	local target = isHeader or obj
-	local SetPoint = getmetatable(target).__index.SetPoint;
-
-	-- Hah, a spot you have to use semi-colon!
-	-- Guess I've never experienced that as these are usually wrapped in do end
-	-- statements.
-	target.SetPoint = restorePosition;
+	if(not target._SetPoint) then
+		target._SetPoint = target.SetPoint
+		target.SetPoint = restorePosition
+		target._SetScale = target.SetScale
+		target.SetScale = restorePosition
+	end
 	target:ClearAllPoints()
 
 	-- damn it Blizzard, _how_ did you manage to get the input of this function
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
-	local point, parentName, x, y, oscale = string.split('\031', _DB[style][identifier])
-	SetPoint(target, point, parentName, point, x / scale, y / scale)
-
-	if(oscale) then
-		target:SetScale(oscale)
+	local point, parentName, x, y, scale = string.split('\031', _DB[style][identifier])
+	if(not scale) then
+		scale = 1
 	end
+
+	if(scale) then
+		target:_SetScale(scale)
+	else
+		scale = target:GetScale()
+	end
+	target:_SetPoint(point, parentName, point, x / scale, y / scale)
 end
 
 local saveDefaultPosition = function(obj)
@@ -404,7 +406,8 @@ do
 		end
 
 		self:SetSize(scale * baseWidth, scale * baseHeight)
-		self.target:SetScale(scale)
+		local target = self. target;
+		(target._SetScale or target.SetScale) (target, scale)
 	end
 
 	getBackdrop = function(obj, isHeader)
