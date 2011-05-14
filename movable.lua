@@ -330,6 +330,12 @@ do
 		return self.name:SetText(smartName(self.obj, self.header))
 	end
 
+	local OnHide = function(self)
+		if(self.dirtyMinHeight) then
+			self:SetAttribute('minHeight', nil)
+		end
+	end
+
 	local OnDragStart = function(self)
 		saveDefaultPosition(self.obj)
 		self:StartMoving()
@@ -361,7 +367,6 @@ do
 		backdrop:SetMovable(true)
 		backdrop:RegisterForDrag"LeftButton"
 
-		backdrop:SetScript("OnShow", OnShow)
 
 		local name = backdrop:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		name:SetPoint"CENTER"
@@ -376,11 +381,16 @@ do
 		backdrop:SetBackdropBorderColor(0, .9, 0)
 		backdrop:SetBackdropColor(0, .9, 0)
 
-		-- Work around the fact that headers with no units displayed are 0 in height.
-		if(isHeader and math.floor(isHeader:GetHeight()) == 0) then
-			local height = isHeader:GetChildren():GetHeight()
-			isHeader:SetHeight(height)
+		-- We have to define a minHeight on the header if it doesn't have one. The
+		-- reason for this is that the header frame will have an height of 0.1 when
+		-- it doesn't have any frames visible.
+		if(isHeader and not isHeader:GetAttribute'minHeight' and math.floor(isHeader:GetHeight()) == 0) then
+			isHeader.dirtyMinHeight = true
+			isHeader:SetAttribute('minHeight', obj:GetHeight())
 		end
+
+		backdrop:SetScript("OnShow", OnShow)
+		backdrop:SetScript('OnHide', OnHide)
 
 		backdrop:SetScript("OnDragStart", OnDragStart)
 		backdrop:SetScript("OnDragStop", OnDragStop)
