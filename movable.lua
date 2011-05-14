@@ -559,9 +559,33 @@ do
 						box:SetPoint'LEFT'
 						box:SetPoint('RIGHT', -30, 0)
 
-						local title = box:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
+						local title = box:CreateFontString(nil, 'ARTWORK', 'GameFontHighlight')
 						title:SetPoint('BOTTOMLEFT', box, 'TOPLEFT', 8, 0)
 						box.title = title
+
+						if(numStyles == 1) then
+							local scaleTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
+							scaleTitle:SetPoint('BOTTOMRIGHT', box, 'TOPRIGHT', -40, 0)
+							scaleTitle:SetText'Scale'
+							scaleTitle:SetJustifyH'RIGHT'
+							box.scaleTitle = scaleTitle
+
+							local yTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
+							yTitle:SetPoint('RIGHT', scaleTitle, 'LEFT', -22, 0)
+							yTitle:SetText'-777'
+							yTitle:SetJustifyH'RIGHT'
+							yTitle:SetWidth(yTitle:GetWidth())
+							yTitle:SetText'Y'
+							box.yTitle = yTitle
+
+							local xTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
+							xTitle:SetPoint('RIGHT', yTitle, 'LEFT', -15, 0)
+							xTitle:SetText'-777'
+							xTitle:SetWidth(yTitle:GetWidth())
+							xTitle:SetText'X'
+							xTitle:SetJustifyH'RIGHT'
+							box.xTitle = xTitle
+						end
 
 						data[numStyles] = box
 					end
