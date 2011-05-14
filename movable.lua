@@ -627,14 +627,14 @@ do
 							local yLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
 							yLabel:SetPoint('RIGHT', scaleLabel, 'LEFT', -15, 0)
 							yLabel:SetText'-777'
-							yLabel:SetJustifyH'RIGHT'
+							yLabel:SetJustifyH'CENTER'
 							yLabel:SetWidth(yLabel:GetWidth())
 							row.yLabel = yLabel
 
 							local xLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
 							xLabel:SetPoint('RIGHT', yLabel, 'LEFT', -15, 0)
 							xLabel:SetWidth(yLabel:GetWidth())
-							xLabel:SetJustifyH'LEFT'
+							xLabel:SetJustifyH'CENTER'
 							row.xLabel = xLabel
 
 							local pointLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
