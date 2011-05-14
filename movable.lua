@@ -27,9 +27,6 @@ local print_fmt = string.format('|cff33ff99%s:|r', _TITLE)
 local print = function(...)
 	return print(print_fmt, ...)
 end
-local round = function(n)
-	return math.floor(n * 1e5 + .5) / 1e5
-end
 
 local backdropPool = {}
 
@@ -77,14 +74,14 @@ local getPoint = function(obj, anchor)
 
 		return string.format(
 			'%s\031%s\031%d\031%d\031\%.3f',
-			point, 'UIParent', round(x * UIS / OES),  round(y * UIS / OES), OS
+			point, 'UIParent', x * UIS / OES,  y * UIS / OES, OS
 		)
 	else
 		local point, parent, _, x, y = anchor:GetPoint()
 
 		return string.format(
 			'%s\031%s\031%d\031%d\031\%.3f',
-			point, 'UIParent', round(x), round(y), obj:GetScale()
+			point, 'UIParent', x, y, obj:GetScale()
 		)
 	end
 end
