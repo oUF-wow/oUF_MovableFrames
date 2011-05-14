@@ -320,6 +320,19 @@ do
 			restorePosition(obj)
 		end
 
+		-- Clean up the defaults DB:
+		for layout, frames in next, _DB.__INITIAL do
+			if(not _DB[layout])  then
+				_DB.__INITIAL[layout] = nil
+			else
+				for frame in next, frames do
+					if(not _DB[layout][frame]) then
+						_DB.__INITIAL[layout][frame] = nil
+					end
+				end
+			end
+		end
+
 		oUF:RegisterInitCallback(restorePosition)
 		self:UnregisterEvent"VARIABLES_LOADED"
 	end
