@@ -12,13 +12,20 @@ assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
 local _DB
 local _DBNAME = GetAddOnMetadata(_NAME, 'X-SavedVariables')
 local _LOCK
+local _TITLE = GetAddOnMetadata(_NAME, 'title')
 
 local _BACKDROP = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background";
 }
 
+-- I could use the title field in the TOC, but people tend to put color and
+-- other shit there, so we'll just use the folder name:
+local slashGlobal = _NAME:gsub('%s+', '_'):gsub('[^%a%d_]+', ''):upper()
+slashGlobal = slashGlobal .. '_OMF'
+
+local print_fmt = string.format('|cff33ff99%s:|r', _TITLE)
 local print = function(...)
-	return print('|cff33ff99oUF_MovableFrames:|r', ...)
+	return print(print_fmt, ...)
 end
 local round = function(n)
 	return math.floor(n * 1e5 + .5) / 1e5
@@ -405,11 +412,11 @@ do
 	local opt = CreateFrame("Frame", nil, InterfaceOptionsFramePanelContainer)
 	opt:Hide()
 
-	opt.name = "oUF: MovableFrames"
+	opt.name = _TITLE
 	opt:SetScript("OnShow", function(self)
 		local title = self:CreateFontString(nil, 'ARTWORK', 'GameFontNormalLarge')
 		title:SetPoint('TOPLEFT', 16, -16)
-		title:SetText'oUF: MovableFrames'
+		title:SetText(_TITLE)
 
 		local subtitle = self:CreateFontString(nil, 'ARTWORK', 'GameFontHighlightSmall')
 		subtitle:SetHeight(40)
@@ -418,7 +425,7 @@ do
 		subtitle:SetNonSpaceWrap(true)
 		subtitle:SetWordWrap(true)
 		subtitle:SetJustifyH'LEFT'
-		subtitle:SetText('Type /omf to toggle frame anchors.')
+		subtitle:SetFormattedText('Type %s to toggle frame anchors.', _G['SLASH_' .. slashGlobal .. 1])
 
 		local scroll = CreateFrame("ScrollFrame", nil, self)
 		scroll:SetPoint('TOPLEFT', subtitle, 'BOTTOMLEFT', 0, -8)
@@ -662,11 +669,6 @@ do
 	InterfaceOptions_AddCategory(opt)
 end
 
--- I could use the title field in the TOC, but people tend to put color and
--- other shit there, so we'll just use the folder name:
-local slashGlobal = _NAME:gsub('%s+', '_'):gsub('[^%a%d_]+', ''):upper()
-slashGlobal = slashGlobal .. '_OMF'
-
 local slashList = GetAddOnMetadata(_NAME, 'X-SlashCmdList'):gsub('%s+', '')
 local handleCmds = function(...)
 	for i=1, select('#', ...) do
@@ -682,7 +684,7 @@ SlashCmdList[slashGlobal] = function(inp)
 	end
 
 	if(inp:match("%S+")) then
-		InterfaceOptionsFrame_OpenToCategory'oUF: MovableFrames'
+		InterfaceOptionsFrame_OpenToCategory(_TITLE)
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
