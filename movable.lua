@@ -6,7 +6,7 @@ assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
 -- The DB is organized as the following:
 -- {
 --    Lily = {
---       player = "CENTER\031UIParent\0310\031-621",
+--       player = "CENTER\031UIParent\0310\031-621\0310.8",
 -- }
 --}
 local _DB
@@ -42,7 +42,8 @@ local getPoint = function(obj, anchor)
 		if(not Ox) then return end
 
 		local UIS = UIParent:GetEffectiveScale()
-		local OS = obj:GetEffectiveScale()
+		local OES = obj:GetEffectiveScale()
+		local OS = obj:GetScale()
 
 		local UIWidth, UIHeight = UIParent:GetRight(), UIParent:GetTop()
 
@@ -75,15 +76,15 @@ local getPoint = function(obj, anchor)
 		end
 
 		return string.format(
-			'%s\031%s\031%d\031%d',
-			point, 'UIParent', round(x * UIS / OS),  round(y * UIS / OS)
+			'%s\031%s\031%d\031%d\031\%.3f',
+			point, 'UIParent', round(x * UIS / OES),  round(y * UIS / OES), OS
 		)
 	else
 		local point, parent, _, x, y = anchor:GetPoint()
 
 		return string.format(
-			'%s\031%s\031%d\031%d',
-			point, 'UIParent', round(x), round(y)
+			'%s\031%s\031%d\031%d\031\%.3f',
+			point, 'UIParent', round(x), round(y), obj:GetScale()
 		)
 	end
 end
@@ -130,13 +131,14 @@ local restoreDefaultPosition = function(style, identifier)
 	end
 
 	if(obj) then
-		local scale = obj:GetScale()
 		local target = isHeader or obj
 		local SetPoint = getmetatable(target).__index.SetPoint;
 
 		target:ClearAllPoints()
+		local point, parentName, x, y, scale = string.split('\031', _DB.__INITIAL[style][identifier])
+		if(not scale) then scale = 1 end
 
-		local point, parentName, x, y = string.split('\031', _DB.__INITIAL[style][identifier])
+		target:SetScale(scale)
 		SetPoint(target, point, parentName, point, x / scale, y / scale)
 
 		local backdrop = backdropPool[target]
@@ -171,8 +173,12 @@ local function restorePosition(obj)
 
 	-- damn it Blizzard, _how_ did you manage to get the input of this function
 	-- reversed. Any sane person would implement this as: split(str, dlm, lim);
-	local point, parentName, x, y = string.split('\031', _DB[style][identifier])
+	local point, parentName, x, y, oscale = string.split('\031', _DB[style][identifier])
 	SetPoint(target, point, parentName, point, x / scale, y / scale)
+
+	if(oscale) then
+		target:SetScale(oscale)
+	end
 end
 
 local saveDefaultPosition = function(obj)
@@ -357,6 +363,40 @@ do
 		savePosition(self.obj, self)
 	end
 
+	local OnMouseDown = function(self)
+		local anchor = self:GetParent()
+		saveDefaultPosition(anchor.obj)
+		anchor:StartSizing('BOTTOMRIGHT')
+
+		local frame = anchor.header or anchor.obj
+		frame:ClearAllPoints()
+		frame:SetAllPoints(anchor)
+
+		self:SetButtonState("PUSHED", true)
+	end
+
+	local OnMouseUp = function(self)
+		local anchor = self:GetParent()
+		self:SetButtonState("NORMAL", false)
+
+		anchor:StopMovingOrSizing()
+		savePosition(anchor.obj, anchor)
+	end
+
+	local OnSizeChanged = function(self, width, height)
+		local baseWidth, baseHeight = self.baseWidth, self.baseHeight
+
+		local scale = width / baseWidth
+
+		-- This is damn tiny!
+		if(scale <= .3) then
+			scale = .3
+		end
+
+		self:SetSize(scale * baseWidth, scale * baseHeight)
+		self.target:SetScale(scale)
+	end
+
 	getBackdrop = function(obj, isHeader)
 		local target = isHeader or obj
 		if(not target:GetCenter()) then return end
@@ -372,8 +412,8 @@ do
 
 		backdrop:EnableMouse(true)
 		backdrop:SetMovable(true)
+		backdrop:SetResizable(true)
 		backdrop:RegisterForDrag"LeftButton"
-
 
 		local name = backdrop:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		name:SetPoint"CENTER"
@@ -381,12 +421,26 @@ do
 		name:SetFont(GameFontNormal:GetFont(), 12)
 		name:SetTextColor(1, 1, 1)
 
+		local scale = CreateFrame('Button', nil, backdrop)
+		scale:SetPoint'BOTTOMRIGHT'
+		scale:SetSize(16, 16)
+
+		scale:SetNormalTexture[[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Up]]
+		scale:SetHighlightTexture[[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Highlight]]
+		scale:SetPushedTexture[[Interface\ChatFrame\UI-ChatIM-SizeGrabber-Down]]
+
+		scale:SetScript('OnMouseDown', OnMouseDown)
+		scale:SetScript('OnMouseUp', OnMouseUp)
+
 		backdrop.name = name
 		backdrop.obj = obj
 		backdrop.header = isHeader
+		backdrop.target = target
 
 		backdrop:SetBackdropBorderColor(0, .9, 0)
 		backdrop:SetBackdropColor(0, .9, 0)
+
+		backdrop.baseWidth, backdrop.baseHeight = obj:GetSize()
 
 		-- We have to define a minHeight on the header if it doesn't have one. The
 		-- reason for this is that the header frame will have an height of 0.1 when
@@ -394,6 +448,8 @@ do
 		if(isHeader and not isHeader:GetAttribute'minHeight' and math.floor(isHeader:GetHeight()) == 0) then
 			isHeader.dirtyMinHeight = true
 			isHeader:SetAttribute('minHeight', obj:GetHeight())
+		elseif(isHeader) then
+			backdrop.baseWidth, backdrop.baseHeight = isHeader:GetSize()
 		end
 
 		backdrop:SetScript("OnShow", OnShow)
@@ -401,6 +457,8 @@ do
 
 		backdrop:SetScript("OnDragStart", OnDragStart)
 		backdrop:SetScript("OnDragStop", OnDragStop)
+
+		backdrop:SetScript('OnSizeChanged', OnSizeChanged)
 
 		backdropPool[target] = backdrop
 
@@ -553,8 +611,8 @@ do
 
 						-- Fetch row and update it:
 						local row = rows[numFrames]
-						local point, _, x, y = string.split('\031', points)
-						row.anchor:SetFormattedText('%11s %4s %4s', point, x, y)
+						local point, _, x, y, s = string.split('\031', points)
+						row.anchor:SetFormattedText('%11s %4s %4s %.2fx', point, x, y, s or 1)
 						row.label:SetText(smartName(unit))
 
 						row.delete.style = style
