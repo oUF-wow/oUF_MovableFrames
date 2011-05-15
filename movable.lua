@@ -180,6 +180,15 @@ local function restorePosition(obj)
 	target:_SetPoint(point, parentName, point, x / scale, y / scale)
 end
 
+local restoreCustomPosition = function(style, ident)
+	for _, obj in next, oUF.objects do
+		local objStyle, objIdent = getObjectInformation(obj)
+		if(objStyle == style and objIdent == ident) then
+			return restorePosition(obj)
+		end
+	end
+end
+
 local saveDefaultPosition = function(obj)
 	local style, identifier, isHeader = getObjectInformation(obj)
 	if(not _DB.__INITIAL) then
@@ -207,6 +216,16 @@ local savePosition = function(obj, anchor)
 	if(not _DB[style]) then _DB[style] = {} end
 
 	_DB[style][identifier] = getPoint(isHeader or obj, anchor)
+end
+
+local saveCustomPosition = function(style, ident, point, x, y, scale)
+	-- Shouldn't really be the case, but you never know!
+	if(not _DB[style]) then _DB[style] = {} end
+
+	_DB[style][ident] = string.format(
+		'%s\031%s\031%d\031%d\031\%.3f',
+		point, 'UIParent', x,  y, scale
+	)
 end
 
 -- Attempt to figure out a more sane name to dispaly.
@@ -373,6 +392,12 @@ do
 	local OnDragStop = function(self)
 		self:StopMovingOrSizing()
 		savePosition(self.obj, self)
+
+		-- Restore the initial anchoring, so the anchor follows the frame when we
+		-- edit positions through the UI.
+		restorePosition(self.obj)
+		self:ClearAllPoints()
+		self:SetAllPoints(self.header or self.obj)
 	end
 
 	local OnMouseDown = function(self)
@@ -521,14 +546,15 @@ do
 
 		local createOrUpdateMadnessOfGodIhateGUIs
 		local OnClick = function(self)
+			local row = self:GetParent()
 			scroll.value = slider:GetValue()
-			_DB[self.style][self.ident] = nil
+			_DB[row.style][row.ident] = nil
 
-			if(not next(_DB[self.style])) then
-				_DB[self.style] = nil
+			if(not next(_DB[row.style])) then
+				_DB[row.style] = nil
 			end
 
-			restoreDefaultPosition(self.style, self.ident)
+			restoreDefaultPosition(row.style, row.ident)
 
 			return createOrUpdateMadnessOfGodIhateGUIs()
 		end
@@ -536,6 +562,137 @@ do
 		local OnEnter = function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
 			GameTooltip:SetText(DELETE)
+		end
+
+		local handleInput = function(label)
+			local text = label:GetText()
+			if(text == '-' or text == '' or text == '.') then
+				text = 0
+			end
+
+			local num = tonumber(text)
+			if(label.hasPostfix and not num) then
+				num = tonumber(text:sub(1,-2))
+			end
+
+			if(label.onlyAboveZero) then
+				if(not (num > 0)) then
+					return .01
+				else
+					return num
+				end
+			end
+
+			return num or text
+		end
+
+		local saveRestorePosition = function(row)
+			saveCustomPosition(
+				row.style,
+				row.ident,
+
+				handleInput(row.pointLabel),
+				handleInput(row.xLabel),
+				handleInput(row.yLabel),
+				handleInput(row.scaleLabel)
+			)
+
+			restoreCustomPosition(row.style, row.ident)
+		end
+
+		local createEditBox
+		do
+			local OnEscapePressed = function(self)
+				self:SetText(self.oldText)
+				self:ClearFocus()
+
+				saveRestorePosition(self:GetParent())
+			end
+
+			local OnEnterPressed = function(self)
+				local text = self:GetText()
+				self:ClearFocus()
+
+				saveRestorePosition(self:GetParent())
+			end
+
+			local OnEditFocusGained = function(self)
+				self.oldText = self:GetText()
+
+				if(self.hasPostfix) then
+					self.oldText = self.oldText:sub(1, -2)
+				end
+
+				self:SetText(self.oldText)
+				self.newText = nil
+			end
+
+			local OnEditFocusLost = function(self)
+				local text = self:GetText()
+				if(text == '-' or text == '' or text == '.') then
+					if(self.onlyAboveZero) then
+						text = 0.01
+					else
+						text = 0
+					end
+				end
+
+				self:SetText(string.format(self.numFormat, text))
+
+				self.newText = nil
+				self.oldText = nil
+			end
+
+			local OnTextChanged = function(self, userInput)
+				if(userInput) then
+					self.newText = self:GetText()
+					saveRestorePosition(self:GetParent())
+				end
+			end
+
+			local OnChar = function(self, key)
+				local text = self:GetText()
+				if(
+					not tonumber(text .. '0') or
+					(not tonumber(key) and key ~= '-' and key ~= '.') or
+					(self.onlyAboveZero and key == '-' and not (self:GetNumber() < 0))
+				) then
+					local pos = self:GetCursorPosition() - 1
+					self:SetText(self.newText or self.oldText)
+					self:SetCursorPosition(pos)
+				end
+
+				self.newText = self:GetText()
+			end
+
+			createEditBox = function(self)
+				local editbox = CreateFrame('EditBox', nil, self)
+
+				editbox:SetWidth(40)
+				editbox:SetMaxLetters(5)
+				editbox:SetAutoFocus(false)
+				editbox:SetFontObject(GameFontHighlight)
+
+				editbox:SetPoint('TOP', 0, -4)
+				editbox:SetPoint('BOTTOM', 0, 0)
+
+				local background = editbox:CreateTexture(nil, 'BACKGROUND')
+				background:SetPoint('TOP', 0, -1)
+				background:SetPoint'LEFT'
+				background:SetPoint'RIGHT'
+				background:SetPoint('BOTTOM', 0, 4)
+
+				background:SetTexture(1, 1, 1, .05)
+
+				editbox:SetScript('OnEscapePressed', OnEscapePressed)
+				editbox:SetScript('OnEnterPressed', OnEnterPressed)
+				editbox:SetScript('OnEditFocusGained', OnEditFocusGained)
+				editbox:SetScript('OnEditFocusLost', OnEditFocusLost)
+				editbox:SetScript('OnTextChanged', OnTextChanged)
+				editbox:SetScript('OnChar', OnChar)
+
+				return editbox
+			end
 		end
 
 		function createOrUpdateMadnessOfGodIhateGUIs()
@@ -565,25 +722,24 @@ do
 
 						if(numStyles == 1) then
 							local scaleTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
-							scaleTitle:SetPoint('BOTTOMRIGHT', box, 'TOPRIGHT', -40, 0)
+							scaleTitle:SetPoint('BOTTOMRIGHT', box, 'TOPRIGHT', -35, 0)
+							scaleTitle:SetWidth(40)
 							scaleTitle:SetText'Scale'
-							scaleTitle:SetJustifyH'RIGHT'
+							scaleTitle:SetJustifyH'CENTER'
 							box.scaleTitle = scaleTitle
 
 							local yTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
-							yTitle:SetPoint('RIGHT', scaleTitle, 'LEFT', -22, 0)
-							yTitle:SetText'-777'
-							yTitle:SetJustifyH'RIGHT'
-							yTitle:SetWidth(yTitle:GetWidth())
+							yTitle:SetPoint('RIGHT', scaleTitle, 'LEFT', -5, 0)
+							yTitle:SetWidth(40)
 							yTitle:SetText'Y'
+							yTitle:SetJustifyH'CENTER'
 							box.yTitle = yTitle
 
 							local xTitle = box:CreateFontString(nil, nil, 'GameFontHighlight')
-							xTitle:SetPoint('RIGHT', yTitle, 'LEFT', -15, 0)
-							xTitle:SetText'-777'
-							xTitle:SetWidth(yTitle:GetWidth())
+							xTitle:SetPoint('RIGHT', yTitle, 'LEFT', -5, 0)
+							xTitle:SetWidth(40)
 							xTitle:SetText'X'
-							xTitle:SetJustifyH'RIGHT'
+							xTitle:SetJustifyH'CENTER'
 							box.xTitle = xTitle
 						end
 
@@ -617,24 +773,28 @@ do
 							-- Notice how these are anchored right to left. Initially when I
 							-- implemented these, I swapped X and Y positioning. It was really
 							-- fun to debug!
-							local scaleLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
-							scaleLabel:SetPoint('TOP', 0, -4)
+							local scaleLabel = createEditBox(row)
 							scaleLabel:SetPoint('RIGHT', -10, 0)
-							scaleLabel:SetPoint'BOTTOM'
-							scaleLabel:SetJustifyH'RIGHT'
+							scaleLabel:SetJustifyH'CENTER'
+
+							scaleLabel.hasPostfix = true
+							scaleLabel.onlyAboveZero = true
+							scaleLabel.numFormat = '%.2fx'
+
 							row.scaleLabel = scaleLabel
 
-							local yLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
-							yLabel:SetPoint('RIGHT', scaleLabel, 'LEFT', -15, 0)
-							yLabel:SetText'-777'
+							local yLabel = createEditBox(row)
+							yLabel:SetPoint('RIGHT', scaleLabel, 'LEFT', -5, 0)
 							yLabel:SetJustifyH'CENTER'
-							yLabel:SetWidth(yLabel:GetWidth())
+
+							yLabel.numFormat = '%d'
 							row.yLabel = yLabel
 
-							local xLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
-							xLabel:SetPoint('RIGHT', yLabel, 'LEFT', -15, 0)
-							xLabel:SetWidth(yLabel:GetWidth())
+							local xLabel = createEditBox(row)
+							xLabel:SetPoint('RIGHT', yLabel, 'LEFT', -5, 0)
 							xLabel:SetJustifyH'CENTER'
+
+							xLabel.numFormat = '%d'
 							row.xLabel = xLabel
 
 							local pointLabel = row:CreateFontString(nil, nil, 'GameFontHighlight')
@@ -671,14 +831,14 @@ do
 						-- Fetch row and update it:
 						local row = rows[numFrames]
 						local point, _, x, y, s = string.split('\031', points)
-						row.pointLabel:SetText(point)
-						row.scaleLabel:SetFormattedText('%.2fx', s or 1)
+						row.scaleLabel:SetText(string.format('%.2fx', s or 1))
 						row.xLabel:SetText(x)
 						row.yLabel:SetText(y)
+						row.pointLabel:SetText(point)
 						row.unitLabel:SetText(smartName(unit))
 
-						row.delete.style = style
-						row.delete.ident = unit
+						row.style = style
+						row.ident = unit
 						row:Show()
 
 						numFrames = numFrames + 1
