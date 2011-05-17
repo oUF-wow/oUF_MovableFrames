@@ -485,6 +485,7 @@ do
 		-- it doesn't have any frames visible.
 		if(isHeader and not isHeader:GetAttribute'minHeight' and math.floor(isHeader:GetHeight()) == 0) then
 			isHeader.dirtyMinHeight = true
+			isHeader:SetHeight(obj:GetHeight())
 			isHeader:SetAttribute('minHeight', obj:GetHeight())
 		elseif(isHeader) then
 			backdrop.baseWidth, backdrop.baseHeight = isHeader:GetSize()
