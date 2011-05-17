@@ -244,6 +244,14 @@ do
 		'arena',
 	}
 
+	local rewrite = {
+		mt = 'maintank',
+		mtt = 'maintanktarget',
+
+		ma = 'mainassist',
+		mat = 'mainassisttarget',
+	}
+
 	local validName = function(smartName)
 		-- Not really a valid name, but we'll accept it for simplicities sake.
 		if(tonumber(smartName)) then
@@ -251,8 +259,11 @@ do
 		end
 
 		if(type(smartName) == 'string') then
-			if(smartName == 'mt') then
-				return 'maintank'
+			-- strip away trailing s from pets, but don't touch boss/focus.
+			smartName = smartName:gsub('([^us])s$', '%1')
+
+			if(rewrite[smartName]) then
+				return rewrite[smartName]
 			end
 
 			for _, v in next, validNames do
@@ -297,7 +308,7 @@ do
 		end
 
 		-- Here comes the substitute train!
-		local n = name:gsub('(%l)(%u)', '%1_%2'):gsub('([%l%u])(%d)', '%1_%2_'):lower()
+		local n = name:gsub('(%l)(%u)', '%1_%2'):gsub('([%l%u])(%d)', '%1_%2_'):gsub('Main_', 'Main'):lower()
 		n = guessName(string.split('_', n))
 		if(n) then
 			nameCache[name] = n
