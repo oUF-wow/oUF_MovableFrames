@@ -308,7 +308,13 @@ do
 		end
 
 		-- Here comes the substitute train!
-		local n = name:gsub('(%l)(%u)', '%1_%2'):gsub('([%l%u])(%d)', '%1_%2_'):gsub('Main_', 'Main'):lower()
+		local n = name
+			:gsub('ToT', 'targettarget')
+			:gsub('(%l)(%u)', '%1_%2')
+			:gsub('([%l%u])(%d)', '%1_%2_')
+			:gsub('Main_', 'Main')
+			:lower()
+
 		n = guessName(string.split('_', n))
 		if(n) then
 			nameCache[name] = n
