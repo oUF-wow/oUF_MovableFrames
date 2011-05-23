@@ -397,6 +397,10 @@ do
 		if(self.dirtyMinHeight) then
 			self:SetAttribute('minHeight', nil)
 		end
+
+		if(self.dirtyMinWidth) then
+			self:SetAttribute('minWidth', nil)
+		end
 	end
 
 	local OnDragStart = function(self)
@@ -502,10 +506,25 @@ do
 		-- We have to define a minHeight on the header if it doesn't have one. The
 		-- reason for this is that the header frame will have an height of 0.1 when
 		-- it doesn't have any frames visible.
-		if(isHeader and not isHeader:GetAttribute'minHeight' and math.floor(isHeader:GetHeight()) == 0) then
-			isHeader.dirtyMinHeight = true
+		if(
+			isHeader and
+			(
+				not isHeader:GetAttribute'minHeight' and math.floor(isHeader:GetHeight()) == 0 or
+				not isHeader:GetAttribute'minWidth' and math.floor(isHeader:GetWidth()) == 0
+			)
+		) then
 			isHeader:SetHeight(obj:GetHeight())
-			isHeader:SetAttribute('minHeight', obj:GetHeight())
+			isHeader:SetWidth(obj:GetWidth())
+
+			if(not isHeader:GetAttribute'minHeight') then
+				isHeader.dirtyMinHeight = true
+				isHeader:SetAttribute('minHeight', obj:GetHeight())
+			end
+
+			if(not isHeader:GetAttribute'minWidth') then
+				isHeader.dirtyMinWidth = true
+				isHeader:SetAttribute('minWidth', obj:GetWidth())
+			end
 		elseif(isHeader) then
 			backdrop.baseWidth, backdrop.baseHeight = isHeader:GetSize()
 		end
