@@ -354,15 +354,17 @@ do
 
 	function frame:VARIABLES_LOADED()
 		-- Catch all oUF instances
-		for index = 1, GetNumAddOns() do
-			local addon = GetAddOnInfo(index)
-			local global = GetAddOnMetadata(addon, 'X-oUF')
-			if(global) then
-				table.insert(instances, _G[global])
+		if(#instances == 0) then
+			for index = 1, GetNumAddOns() do
+				local addon = GetAddOnInfo(index)
+				local global = GetAddOnMetadata(addon, 'X-oUF')
+				if(global) then
+					table.insert(instances, _G[global])
+				end
 			end
-		end
 
-		assert(#instances > 0, "oUF_MovableFrames was unable to locate oUF install.")
+			assert(#instances > 0, "oUF_MovableFrames was unable to locate oUF install.")
+		end
 
 		-- I honestly don't trust the load order of SVs.
 		_DB = _G[_DBNAME] or {}
