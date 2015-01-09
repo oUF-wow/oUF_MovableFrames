@@ -1,7 +1,9 @@
 local _NAME, _NS = ...
-local oUF = _NS.oUF or oUF
 
-assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
+local instances = {}
+if(_NS.oUF) then
+	table.insert(instances, _NS.oUF)
+end
 
 -- The DB is organized as the following:
 -- {
@@ -116,13 +118,15 @@ local restoreDefaultPosition = function(style, identifier)
 	if(not _DB.__INITIAL or not _DB.__INITIAL[style] or not _DB.__INITIAL[style][identifier]) then return end
 
 	local obj, isHeader
-	for _, frame in next, oUF.objects do
-		local fStyle, fIdentifier, fIsHeader = getObjectInformation(frame)
-		if(fStyle == style and fIdentifier == identifier) then
-			obj = frame
-			isHeader = fIsHeader
+	for _, oUF in next, instances do
+		for _, frame in next, oUF.objects do
+			local fStyle, fIdentifier, fIsHeader = getObjectInformation(frame)
+			if(fStyle == style and fIdentifier == identifier) then
+				obj = frame
+				isHeader = fIsHeader
 
-			break
+				break
+			end
 		end
 	end
 
@@ -181,10 +185,12 @@ local function restorePosition(obj)
 end
 
 local restoreCustomPosition = function(style, ident)
-	for _, obj in next, oUF.objects do
-		local objStyle, objIdent = getObjectInformation(obj)
-		if(objStyle == style and objIdent == ident) then
-			return restorePosition(obj)
+	for _, oUF in next, instances do
+		for _, obj in next, oUF.objects do
+			local objStyle, objIdent = getObjectInformation(obj)
+			if(objStyle == style and objIdent == ident) then
+				return restorePosition(obj)
+			end
 		end
 	end
 end
@@ -347,12 +353,29 @@ do
 	end)
 
 	function frame:VARIABLES_LOADED()
+		-- Catch all oUF instances
+		if(#instances == 0) then
+			for index = 1, GetNumAddOns() do
+				local addon = GetAddOnInfo(index)
+				local global = GetAddOnMetadata(addon, 'X-oUF')
+				if(global) then
+					table.insert(instances, _G[global])
+				end
+			end
+
+			assert(#instances > 0, "oUF_MovableFrames was unable to locate oUF install.")
+		end
+
 		-- I honestly don't trust the load order of SVs.
 		_DB = _G[_DBNAME] or {}
 		_G[_DBNAME] = _DB
 		-- Got to catch them all!
-		for _, obj in next, oUF.objects do
-			restorePosition(obj)
+		for _, oUF in next, instances do
+			for _, obj in next, oUF.objects do
+				restorePosition(obj)
+			end
+
+			oUF:RegisterInitCallback(restorePosition)
 		end
 
 		-- Clean up the defaults DB:
@@ -370,7 +393,6 @@ do
 			end
 		end
 
-		oUF:RegisterInitCallback(restorePosition)
 		self:UnregisterEvent"VARIABLES_LOADED"
 	end
 	frame:RegisterEvent"VARIABLES_LOADED"
@@ -1006,10 +1028,12 @@ SlashCmdList[slashGlobal] = function(inp)
 		InterfaceOptionsFrame_OpenToCategory(_TITLE)
 	else
 		if(not _LOCK) then
-			for k, obj in next, oUF.objects do
-				local style, identifier, isHeader = getObjectInformation(obj)
-				local backdrop = getBackdrop(obj, isHeader)
-				if(backdrop) then backdrop:Show() end
+			for _, oUF in next, instances do
+				for k, obj in next, oUF.objects do
+					local style, identifier, isHeader = getObjectInformation(obj)
+					local backdrop = getBackdrop(obj, isHeader)
+					if(backdrop) then backdrop:Show() end
+				end
 			end
 
 			_LOCK = true
