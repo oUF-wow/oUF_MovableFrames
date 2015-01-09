@@ -381,6 +381,13 @@ do
 			for k, bdrop in next, backdropPool do
 				bdrop:Hide()
 			end
+
+			for _, obj in next, oUF.objects do
+				obj.unit = obj.__unit
+				obj:Enable()
+				obj:UpdateAllElements('OnShow')
+			end
+
 			_LOCK = nil
 		end
 	end
@@ -1007,6 +1014,11 @@ SlashCmdList[slashGlobal] = function(inp)
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
+				obj:Disable()
+				obj.__unit = obj.unit
+				obj.unit = 'player'
+				obj:Show()
+
 				local style, identifier, isHeader = getObjectInformation(obj)
 				local backdrop = getBackdrop(obj, isHeader)
 				if(backdrop) then backdrop:Show() end
@@ -1016,6 +1028,12 @@ SlashCmdList[slashGlobal] = function(inp)
 		else
 			for k, bdrop in next, backdropPool do
 				bdrop:Hide()
+			end
+
+			for _, obj in next, oUF.objects do
+				obj.unit = obj.__unit
+				obj:Enable()
+				obj:UpdateAllElements('OnShow')
 			end
 
 			_LOCK = nil
