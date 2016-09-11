@@ -1007,9 +1007,11 @@ SlashCmdList[slashGlobal] = function(inp)
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
-				local style, identifier, isHeader = getObjectInformation(obj)
-				local backdrop = getBackdrop(obj, isHeader)
-				if(backdrop) then backdrop:Show() end
+				if(not obj.disableMovement) then
+					local style, identifier, isHeader = getObjectInformation(obj)
+					local backdrop = getBackdrop(obj, isHeader)
+					if(backdrop) then backdrop:Show() end
+				end
 			end
 
 			_LOCK = true
