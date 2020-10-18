@@ -463,7 +463,7 @@ do
 		if(not target:GetCenter()) then return end
 		if(backdropPool[target]) then return backdropPool[target] end
 
-		local backdrop = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
+		local backdrop = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 		backdrop:Hide()
 
 		backdrop:SetBackdrop(_BACKDROP)
