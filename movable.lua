@@ -463,8 +463,7 @@ do
 		if(not target:GetCenter()) then return end
 		if(backdropPool[target]) then return backdropPool[target] end
 
-		local backdrop = CreateFrame"Frame"
-		backdrop:SetParent(UIParent)
+		local backdrop = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 		backdrop:Hide()
 
 		backdrop:SetBackdrop(_BACKDROP)
@@ -742,7 +741,7 @@ do
 			for style, styleData in next, _DB do
 				if(style ~= '__INITIAL') then
 					if(not data[numStyles]) then
-						local box = CreateFrame('Frame', nil, scrollchild)
+						local box = CreateFrame('Frame', nil, scrollchild, "BackdropTemplate")
 						box:SetBackdrop(backdrop)
 						box:SetBackdropColor(.1, .1, .1, .5)
 						box:SetBackdropBorderColor(.3, .3, .3, 1)
@@ -793,7 +792,7 @@ do
 					local numFrames = 1
 					for unit, points in next, styleData do
 						if(not rows[numFrames]) then
-							local row = CreateFrame('Button', nil, box)
+							local row = CreateFrame('Button', nil, box, "BackdropTemplate")
 
 							row:SetBackdrop(backdrop)
 							row:SetBackdropBorderColor(.3, .3, .3)
