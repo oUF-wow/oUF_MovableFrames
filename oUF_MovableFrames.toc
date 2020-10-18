@@ -1,7 +1,7 @@
 ## Interface: 90001
 ## Title: oUF: MovableFrames
 ## Author: Haste
-## Version: 1.16
+## Version: 1.17
 ## OptionalDeps: oUF
 ## SavedVariables: bb08df87101dd7f2161e5b77cf750f753c58ef1b
 ## Notes: Easily move frames created by oUF.
