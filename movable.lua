@@ -1006,6 +1006,7 @@ SlashCmdList[slashGlobal] = function(inp)
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
+				if(obj.isNamePlate) then return end -- bail out on nameplates since we can't move those
 				if(not obj.disableMovement) then
 					local style, identifier, isHeader = getObjectInformation(obj)
 					local backdrop = getBackdrop(obj, isHeader)
