@@ -711,8 +711,8 @@ do
 				editbox:SetAutoFocus(false)
 				editbox:SetFontObject(GameFontHighlight)
 
-				editbox:SetPoint('TOP', 0, -4)
-				editbox:SetPoint('BOTTOM', 0, 0)
+				editbox:SetPoint('TOP')
+				editbox:SetPoint('BOTTOM')
 
 				editbox:SetScript('OnEscapePressed', OnEscapePressed)
 				editbox:SetScript('OnEnterPressed', OnEnterPressed)
@@ -836,8 +836,6 @@ do
 
 							local unitLabel= row:CreateFontString(nil, nil, 'GameFontHighlight')
 							unitLabel:SetPoint('LEFT', 10, 0)
-							unitLabel:SetPoint('TOP', 0, -4)
-							unitLabel:SetPoint'BOTTOM'
 							unitLabel:SetJustifyH'LEFT'
 							row.unitLabel = unitLabel
 
