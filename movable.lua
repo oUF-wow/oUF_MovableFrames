@@ -561,20 +561,17 @@ do
 		subtitle:SetJustifyH'LEFT'
 		subtitle:SetFormattedText('Type %s to toggle frame anchors.', _G['SLASH_' .. slashGlobal .. 1])
 
-		local scroll = CreateFrame("ScrollFrame", nil, self)
+		local scroll = CreateFrame('ScrollFrame', nil, self, 'UIPanelScrollFrameTemplate')
 		scroll:SetPoint('TOPLEFT', subtitle, 'BOTTOMLEFT', 0, -8)
-		scroll:SetPoint("BOTTOMRIGHT", 0, 4)
+		scroll:SetPoint("BOTTOMRIGHT", -27, 4)
 
 		local scrollchild = CreateFrame("Frame", nil, self)
-		scrollchild:SetPoint"LEFT"
-		scrollchild:SetHeight(scroll:GetHeight())
-		scrollchild:SetWidth(scroll:GetWidth())
+		scrollchild:SetHeight(1)
+		scrollchild:SetWidth(InterfaceOptionsFramePanelContainer:GetWidth() - 18)
 
 		scroll:SetScrollChild(scrollchild)
 		scroll:UpdateScrollChildRect()
 		scroll:EnableMouseWheel(true)
-
-		local slider = CreateFrame("Slider", nil, scroll)
 
 		local backdrop = {
 			bgFile = [[Interface\ChatFrame\ChatFrameBackground]], tile = true, tileSize = 16,
@@ -585,7 +582,6 @@ do
 		local createOrUpdateMadnessOfGodIhateGUIs
 		local OnClick = function(self)
 			local row = self:GetParent()
-			scroll.value = slider:GetValue()
 			_DB[row.style][row.ident] = nil
 
 			if(not next(_DB[row.style])) then
@@ -896,76 +892,7 @@ do
 			end
 
 			self.data = data
-			local height = slideHeight - scroll:GetHeight()
-			if(height > 0) then
-				slider:SetMinMaxValues(0, height)
-			else
-				slider:SetMinMaxValues(0, 0)
-			end
-
-			slider:SetValue(scroll.value or 0)
 		end
-
-		slider:SetWidth(16)
-
-		slider:SetPoint("TOPRIGHT", -8, -24)
-		slider:SetPoint("BOTTOMRIGHT", -8, 24)
-
-		local up = CreateFrame("Button", nil, slider)
-		up:SetPoint("BOTTOM", slider, "TOP")
-		up:SetWidth(16)
-		up:SetHeight(16)
-		up:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up")
-		up:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Down")
-		up:SetDisabledTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Disabled")
-		up:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Highlight")
-
-		up:GetNormalTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		up:GetPushedTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		up:GetDisabledTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		up:GetHighlightTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		up:GetHighlightTexture():SetBlendMode("ADD")
-
-		up:SetScript("OnClick", function(self)
-			local box = self:GetParent()
-			box:SetValue(box:GetValue() - box:GetHeight()/2)
-		end)
-
-		local down = CreateFrame("Button", nil, slider)
-		down:SetPoint("TOP", slider, "BOTTOM")
-		down:SetWidth(16)
-		down:SetHeight(16)
-		down:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up")
-		down:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Down")
-		down:SetDisabledTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Disabled")
-		down:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Highlight")
-
-		down:GetNormalTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		down:GetPushedTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		down:GetDisabledTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		down:GetHighlightTexture():SetTexCoord(1/4, 3/4, 1/4, 3/4)
-		down:GetHighlightTexture():SetBlendMode("ADD")
-
-		down:SetScript("OnClick", function(self)
-			local box = self:GetParent()
-			box:SetValue(box:GetValue() + box:GetHeight()/2)
-		end)
-
-		slider:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
-		local thumb = slider:GetThumbTexture()
-		thumb:SetWidth(16)
-		thumb:SetHeight(24)
-		thumb:SetTexCoord(1/4, 3/4, 1/8, 7/8)
-
-		slider:SetScript("OnValueChanged", function(self, val, ...)
-			local min, max = self:GetMinMaxValues()
-			if(val == min) then up:Disable() else up:Enable() end
-			if(val == max) then down:Disable() else down:Enable() end
-
-			scroll.value = val
-			scroll:SetVerticalScroll(val)
-			scrollchild:SetPoint('TOP', 0, val)
-		end)
 
 		opt:SetScript("OnShow", function()
 			return createOrUpdateMadnessOfGodIhateGUIs()
