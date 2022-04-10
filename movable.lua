@@ -740,7 +740,7 @@ do
 							box:SetPoint('TOP', data[numStyles - 1], 'BOTTOM', 0, -16)
 						end
 						box:SetPoint'LEFT'
-						box:SetPoint('RIGHT', -30, 0)
+						box:SetPoint('RIGHT', scroll, 0, 0)
 
 						local title = box:CreateFontString(nil, 'ARTWORK', 'GameFontHighlight')
 						title:SetPoint('BOTTOMLEFT', box, 'TOPLEFT', 8, 0)
