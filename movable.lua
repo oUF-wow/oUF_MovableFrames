@@ -714,14 +714,6 @@ do
 				editbox:SetPoint('TOP', 0, -4)
 				editbox:SetPoint('BOTTOM', 0, 0)
 
-				local background = editbox:CreateTexture(nil, 'BACKGROUND')
-				background:SetPoint('TOP', 0, -1)
-				background:SetPoint'LEFT'
-				background:SetPoint'RIGHT'
-				background:SetPoint('BOTTOM', 0, 4)
-
-				background:SetTexture(1, 1, 1, .05)
-
 				editbox:SetScript('OnEscapePressed', OnEscapePressed)
 				editbox:SetScript('OnEnterPressed', OnEnterPressed)
 				editbox:SetScript('OnEditFocusGained', OnEditFocusGained)
