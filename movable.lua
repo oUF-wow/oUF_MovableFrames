@@ -921,7 +921,7 @@ SlashCmdList[slashGlobal] = function(inp)
 	end
 
 	if(inp:match("%S+")) then
-		Settings.OpenToCategoryID(_CATEGORY:GetID())
+		Settings.OpenToCategory(_CATEGORY:GetID())
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
