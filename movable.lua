@@ -13,6 +13,7 @@ local _DB
 local _DBNAME = C_AddOns.GetAddOnMetadata(_NAME, 'X-SavedVariables')
 local _LOCK
 local _TITLE = C_AddOns.GetAddOnMetadata(_NAME, 'title')
+local _CATEGORY
 
 local _BACKDROP = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background";
@@ -543,7 +544,7 @@ do
 end
 
 do
-	local opt = CreateFrame("Frame", nil, InterfaceOptionsFramePanelContainer)
+	local opt = CreateFrame("Frame")
 	opt:Hide()
 
 	opt.name = _TITLE
@@ -567,7 +568,7 @@ do
 
 		local scrollchild = CreateFrame("Frame", nil, self)
 		scrollchild:SetHeight(1)
-		scrollchild:SetWidth(InterfaceOptionsFramePanelContainer:GetWidth() - 18)
+		scrollchild:SetWidth(self:GetWidth() - 18)
 
 		scroll:SetScrollChild(scrollchild)
 		scroll:UpdateScrollChildRect()
@@ -901,7 +902,8 @@ do
 		return createOrUpdateMadnessOfGodIhateGUIs()
 	end)
 
-	InterfaceOptions_AddCategory(opt)
+	_CATEGORY = Settings.RegisterCanvasLayoutCategory(opt, _TITLE)
+	Settings.RegisterAddOnCategory(_CATEGORY)
 end
 
 local slashList = C_AddOns.GetAddOnMetadata(_NAME, 'X-SlashCmdList'):gsub('%s+', '')
@@ -919,7 +921,7 @@ SlashCmdList[slashGlobal] = function(inp)
 	end
 
 	if(inp:match("%S+")) then
-		InterfaceOptionsFrame_OpenToCategory(_TITLE)
+		Settings.OpenToCategoryID(_CATEGORY:GetID())
 	else
 		if(not _LOCK) then
 			for k, obj in next, oUF.objects do
