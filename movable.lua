@@ -10,9 +10,9 @@ assert(oUF, "oUF_MovableFrames was unable to locate oUF install.")
 -- }
 --}
 local _DB
-local _DBNAME = GetAddOnMetadata(_NAME, 'X-SavedVariables')
+local _DBNAME = C_AddOns.GetAddOnMetadata(_NAME, 'X-SavedVariables')
 local _LOCK
-local _TITLE = GetAddOnMetadata(_NAME, 'title')
+local _TITLE = C_AddOns.GetAddOnMetadata(_NAME, 'title')
 
 local _BACKDROP = {
 	bgFile = "Interface\\Tooltips\\UI-Tooltip-Background";
@@ -904,7 +904,7 @@ do
 	InterfaceOptions_AddCategory(opt)
 end
 
-local slashList = GetAddOnMetadata(_NAME, 'X-SlashCmdList'):gsub('%s+', '')
+local slashList = C_AddOns.GetAddOnMetadata(_NAME, 'X-SlashCmdList'):gsub('%s+', '')
 local handleCmds = function(...)
 	for i=1, select('#', ...) do
 		local cmd = select(i, ...)
